@@ -58,18 +58,17 @@ const BusinessPanel = ({
           <p className="text-sm text-muted-foreground mb-3">{currentCity}</p>
           
           {/* Business Type Filter */}
-          <Select value={businessType} onValueChange={onBusinessTypeChange}>
+          <Select value={businessType || "all"} onValueChange={(value) => onBusinessTypeChange(value === "all" ? "" : value)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="All business types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All business types</SelectItem>
+              <SelectItem value="all">All business types</SelectItem>
               <SelectItem value="restaurant">Restaurant</SelectItem>
               <SelectItem value="fast_food">Fast Food</SelectItem>
               <SelectItem value="tourism">Tourism</SelectItem>
             </SelectContent>
           </Select>
-          
           {/* Business Count */}
           <p className="text-xs text-muted-foreground mt-2">{getBusinessCount()}</p>
         </div>
