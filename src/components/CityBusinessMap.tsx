@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { MapPin, Navigation, List, Loader2, Search, Settings } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { MapPin, Navigation, List, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useToast } from '@/hooks/use-toast';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import MapView from './MapView';
@@ -22,31 +21,16 @@ const CityBusinessMap = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [manualCity, setManualCity] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   
   const { toast } = useToast();
-  const { getUserLocation, isLoading: locationLoading } = useGeolocation();
-
-  // Filter businesses based on search query
-  const filteredBusinesses = useMemo(() => {
-    if (!searchQuery.trim()) return businesses;
-    
-    const query = searchQuery.toLowerCase();
-    return businesses.filter(business =>
-      business.name.toLowerCase().includes(query) ||
-      business.type.toLowerCase().includes(query) ||
-      business.address.toLowerCase().includes(query)
-    );
-  }, [businesses, searchQuery]);
+  const { getUserLocation, isLoading: locationLoading, error: locationError } = useGeolocation();
 
   // Load businesses for current city
   const loadBusinesses = useCallback(async (type = '') => {
     setIsLoading(true);
     try {
-      // Simulate API delay for better UX demonstration
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
       // For demo purposes, create sample data
+      // In a real app, you would fetch from an API
       const sampleBusinesses = createSampleData(currentCoordinates, currentCity);
       
       // Filter by type if specified
@@ -77,6 +61,7 @@ const CityBusinessMap = () => {
     setBusinessType(type);
   };
 
+  // Handle business selection
   const handleBusinessSelect = (business: Business) => {
     setSelectedBusiness(business);
     setCurrentCoordinates({ lat: business.latitude, lng: business.longitude });
@@ -140,35 +125,20 @@ const CityBusinessMap = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-gradient-card border-b border-border shadow-elegant backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
-            <div className="flex items-center gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-card-foreground bg-gradient-primary bg-clip-text text-transparent">
-                  City Business Map
-                </h1>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  <span className="font-medium">{currentCity}</span>
-                </div>
+      <header className="bg-card border-b border-border p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-card-foreground">City Business Map</h1>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>{currentCity}</span>
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search businesses..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-48 bg-background/50 border-border/50 focus:bg-background transition-colors"
-                />
-              </div>
-              
+            <div className="flex flex-col sm:flex-row gap-2">
               {/* Manual City Input */}
               <div className="flex gap-2">
                 <Input
@@ -176,9 +146,9 @@ const CityBusinessMap = () => {
                   value={manualCity}
                   onChange={(e) => setManualCity(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-32 bg-background/50 border-border/50 focus:bg-background transition-colors"
+                  className="w-32"
                 />
-                <Button onClick={handleSetManualCity} size="sm" disabled={isLoading} variant="secondary">
+                <Button onClick={handleSetManualCity} size="sm" disabled={isLoading}>
                   Set City
                 </Button>
               </div>
@@ -190,7 +160,6 @@ const CityBusinessMap = () => {
                   variant="outline"
                   size="sm"
                   disabled={locationLoading}
-                  className="shadow-sm hover:shadow-md transition-shadow"
                 >
                   <Navigation className="h-4 w-4 mr-2" />
                   {locationLoading ? 'Locating...' : 'My Location'}
@@ -200,13 +169,10 @@ const CityBusinessMap = () => {
                   onClick={() => setIsPanelOpen(true)}
                   variant="outline"
                   size="sm"
-                  className="shadow-sm hover:shadow-md transition-shadow"
                 >
                   <List className="h-4 w-4 mr-2" />
-                  Businesses ({filteredBusinesses.length})
+                  Businesses ({businesses.length})
                 </Button>
-                
-                <ThemeToggle />
               </div>
             </div>
           </div>
@@ -214,13 +180,13 @@ const CityBusinessMap = () => {
       </header>
 
       {/* Main Content */}
-      <main className="relative h-[calc(100vh-120px)]">
+      <main className="relative h-[calc(100vh-100px)]">
         {/* Loading Overlay */}
         {isLoading && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-40 flex items-center justify-center">
-            <div className="flex items-center gap-3 text-foreground bg-card px-6 py-4 rounded-lg shadow-elegant animate-fade-in">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="font-medium">Loading businesses...</span>
+            <div className="flex items-center gap-2 text-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Loading...</span>
             </div>
           </div>
         )}
@@ -228,7 +194,7 @@ const CityBusinessMap = () => {
         {/* Map */}
         <MapView
           coordinates={currentCoordinates}
-          businesses={filteredBusinesses}
+          businesses={businesses}
           onBusinessSelect={handleBusinessSelect}
         />
 
@@ -236,15 +202,12 @@ const CityBusinessMap = () => {
         <BusinessPanel
           isOpen={isPanelOpen}
           onClose={() => setIsPanelOpen(false)}
-          businesses={filteredBusinesses}
+          businesses={businesses}
           currentCity={currentCity}
           businessType={businessType}
           onBusinessTypeChange={handleBusinessTypeChange}
           onBusinessSelect={handleBusinessSelect}
           selectedBusiness={selectedBusiness}
-          isLoading={isLoading}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
         />
       </main>
     </div>
