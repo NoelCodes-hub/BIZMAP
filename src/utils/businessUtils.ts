@@ -58,8 +58,8 @@ export const createSampleData = (coordinates: Coordinates, currentCity: string):
     ];
   }
 
-  // Real Bulawayo businesses
-  return [
+  // Real Bulawayo businesses - ensuring all have valid coordinates
+  const businesses: Business[] = [
     // Banks
     { id: 1, name: "ZB Bank", ...getStreetCoordinates('Jason Moyo St', '8th Ave'), type: "banking", city: currentCity, address: "8th Ave & Jason Moyo St" },
     { id: 2, name: "CBZ Bank", ...getStreetCoordinates('Fort St', '8th Ave'), type: "banking", city: currentCity, address: "8th Ave & Fort St" },
@@ -141,6 +141,16 @@ export const createSampleData = (coordinates: Coordinates, currentCity: string):
     { id: 56, name: "Zimbabwe National Chamber of Commerce", ...getStreetCoordinates('Fort St', '9th Ave'), type: "business_services", city: currentCity, address: "9th Ave & Fort St" },
     { id: 57, name: "PN&A Chartered Accountants", latitude: -20.1486, longitude: 28.5806, type: "business_services", city: currentCity, address: "CBD" }
   ];
+
+  // Validate all businesses have coordinates before returning
+  return businesses.filter(business => {
+    const hasValidCoords = business.latitude != null && business.longitude != null && 
+                          !isNaN(business.latitude) && !isNaN(business.longitude);
+    if (!hasValidCoords) {
+      console.warn('Business has invalid coordinates and will be excluded:', business.name);
+    }
+    return hasValidCoords;
+  });
 };
 
 export const getMarkerColor = (type: string): string => {

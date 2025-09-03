@@ -56,34 +56,46 @@ const MapView = ({ coordinates, businesses, onBusinessSelect }: MapViewProps) =>
     });
     markersRef.current = [];
 
-    // Add business markers
+    // Add business markers with validation
     businesses.forEach(business => {
-      const marker = L.marker([business.latitude, business.longitude], {
-        icon: L.divIcon({
-          className: `custom-marker ${business.type}`,
-          html: `<div style="background: ${getMarkerColor(business.type)}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
-        })
-      });
-
-      if (mapRef.current) {
-        marker.addTo(mapRef.current);
+      // Validate coordinates exist and are numbers
+      if (!business.latitude || !business.longitude || 
+          typeof business.latitude !== 'number' || typeof business.longitude !== 'number' ||
+          isNaN(business.latitude) || isNaN(business.longitude)) {
+        console.warn('Skipping business with invalid coordinates:', business.name);
+        return;
       }
 
-      marker.bindPopup(`
-        <div style="min-width: 200px;">
-          <h4 style="margin: 0 0 8px 0; color: #333;">${business.name}</h4>
-          <p style="margin: 0 0 5px 0; color: #666; font-size: 12px; text-transform: capitalize;">${business.type.replace('_', ' ')}</p>
-          <p style="margin: 0; color: #888; font-size: 11px;">${business.address}</p>
-        </div>
-      `);
+      try {
+        const marker = L.marker([business.latitude, business.longitude], {
+          icon: L.divIcon({
+            className: `custom-marker ${business.type}`,
+            html: `<div style="background: ${getMarkerColor(business.type)}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          })
+        });
 
-      marker.on('click', () => {
-        onBusinessSelect(business);
-      });
+        if (mapRef.current) {
+          marker.addTo(mapRef.current);
+        }
 
-      markersRef.current.push(marker);
+        marker.bindPopup(`
+          <div style="min-width: 200px;">
+            <h4 style="margin: 0 0 8px 0; color: #333;">${business.name}</h4>
+            <p style="margin: 0 0 5px 0; color: #666; font-size: 12px; text-transform: capitalize;">${business.type.replace('_', ' ')}</p>
+            <p style="margin: 0; color: #888; font-size: 11px;">${business.address}</p>
+          </div>
+        `);
+
+        marker.on('click', () => {
+          onBusinessSelect(business);
+        });
+
+        markersRef.current.push(marker);
+      } catch (error) {
+        console.error('Error creating marker for business:', business.name, error);
+      }
     });
   }, [businesses, onBusinessSelect]);
 
