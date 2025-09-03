@@ -1,19 +1,17 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Business, Coordinates } from '@/types/business';
-import { getMarkerColor } from '@/utils/businessUtils';
+import { Coordinates } from '@/types/business';
 
 interface MapViewProps {
   coordinates: Coordinates;
-  businesses: Business[];
-  onBusinessSelect: (business: Business) => void;
+  onLandMarkerAdd?: (coordinates: Coordinates) => void;
 }
 
-const MapView = ({ coordinates, businesses, onBusinessSelect }: MapViewProps) => {
+const MapView = ({ coordinates, onLandMarkerAdd }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const markersRef = useRef<L.Marker[]>([]);
+  const landMarkersRef = useRef<L.Marker[]>([]);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -50,54 +48,63 @@ const MapView = ({ coordinates, businesses, onBusinessSelect }: MapViewProps) =>
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => {
-      mapRef.current?.removeLayer(marker);
-    });
-    markersRef.current = [];
+    // Add double right-click event for land markers
+    const handleDoubleRightClick = (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+      
+      // Create land marker
+      const landMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: 'custom-marker land-marker',
+          html: '<div style="background: hsl(var(--destructive)); width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"></div>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        })
+      }).addTo(mapRef.current!);
 
-    // Add business markers with validation
-    businesses.forEach(business => {
-      // Validate coordinates exist and are numbers
-      if (!business.latitude || !business.longitude || 
-          typeof business.latitude !== 'number' || typeof business.longitude !== 'number' ||
-          isNaN(business.latitude) || isNaN(business.longitude)) {
-        console.warn('Skipping business with invalid coordinates:', business.name);
-        return;
+      landMarker.bindPopup(`
+        <div style="min-width: 150px;">
+          <h4 style="margin: 0 0 8px 0; color: #333;">Land Marker</h4>
+          <p style="margin: 0; color: #666; font-size: 11px;">Lat: ${lat.toFixed(6)}</p>
+          <p style="margin: 0; color: #666; font-size: 11px;">Lng: ${lng.toFixed(6)}</p>
+          <button onclick="this.closest('.leaflet-popup').remove(); document.querySelector('.leaflet-marker-pane').lastChild.remove();" style="margin-top: 8px; padding: 4px 8px; background: hsl(var(--destructive)); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Remove</button>
+        </div>
+      `);
+
+      landMarkersRef.current.push(landMarker);
+      
+      // Call callback if provided
+      if (onLandMarkerAdd) {
+        onLandMarkerAdd({ lat, lng });
       }
+    };
 
-      try {
-        const marker = L.marker([business.latitude, business.longitude], {
-          icon: L.divIcon({
-            className: `custom-marker ${business.type}`,
-            html: `<div style="background: ${getMarkerColor(business.type)}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
-          })
-        });
+    let rightClickCount = 0;
+    let rightClickTimer: NodeJS.Timeout;
 
-        if (mapRef.current) {
-          marker.addTo(mapRef.current);
-        }
-
-        marker.bindPopup(`
-          <div style="min-width: 200px;">
-            <h4 style="margin: 0 0 8px 0; color: #333;">${business.name}</h4>
-            <p style="margin: 0 0 5px 0; color: #666; font-size: 12px; text-transform: capitalize;">${business.type.replace('_', ' ')}</p>
-            <p style="margin: 0; color: #888; font-size: 11px;">${business.address}</p>
-          </div>
-        `);
-
-        marker.on('click', () => {
-          onBusinessSelect(business);
-        });
-
-        markersRef.current.push(marker);
-      } catch (error) {
-        console.error('Error creating marker for business:', business.name, error);
+    mapRef.current.on('contextmenu', (e: L.LeafletMouseEvent) => {
+      rightClickCount++;
+      
+      if (rightClickCount === 1) {
+        rightClickTimer = setTimeout(() => {
+          rightClickCount = 0;
+        }, 300);
+      } else if (rightClickCount === 2) {
+        clearTimeout(rightClickTimer);
+        rightClickCount = 0;
+        handleDoubleRightClick(e);
       }
     });
-  }, [businesses, onBusinessSelect]);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off('contextmenu');
+      }
+      if (rightClickTimer) {
+        clearTimeout(rightClickTimer);
+      }
+    };
+  }, [onLandMarkerAdd]);
 
   const centerOnCoordinates = (coords: Coordinates, zoom = 16) => {
     if (mapRef.current) {

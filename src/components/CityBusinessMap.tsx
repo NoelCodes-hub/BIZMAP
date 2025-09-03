@@ -167,7 +167,6 @@ const CityBusinessMap = () => {
                 
                 <Button
                   onClick={() => setIsPanelOpen(true)}
-                  variant="outline"
                   size="sm"
                 >
                   <List className="h-4 w-4 mr-2" />
@@ -194,8 +193,12 @@ const CityBusinessMap = () => {
         {/* Map */}
         <MapView
           coordinates={currentCoordinates}
-          businesses={businesses}
-          onBusinessSelect={handleBusinessSelect}
+          onLandMarkerAdd={(coords) => {
+            toast({
+              title: "Land marker added",
+              description: `Marker placed at ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`,
+            });
+          }}
         />
 
         {/* Business Panel */}
