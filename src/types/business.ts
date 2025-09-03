@@ -3,7 +3,7 @@ export interface Business {
   name: string;
   latitude: number;
   longitude: number;
-  type: 'restaurant' | 'fast_food' | 'tourism';
+  type: 'restaurant' | 'fast_food' | 'tourism' | 'banking' | 'telecom' | 'government' | 'education' | 'retail' | 'healthcare' | 'automotive' | 'hotel' | 'entertainment' | 'pharmacy' | 'beauty' | 'business_services' | 'ngo';
   city: string;
   address: string;
 }

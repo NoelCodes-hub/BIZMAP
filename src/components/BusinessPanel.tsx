@@ -64,9 +64,22 @@ const BusinessPanel = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All business types</SelectItem>
+              <SelectItem value="banking">Banking</SelectItem>
+              <SelectItem value="telecom">Telecommunications</SelectItem>
+              <SelectItem value="government">Government Services</SelectItem>
+              <SelectItem value="education">Education</SelectItem>
+              <SelectItem value="retail">Retail</SelectItem>
+              <SelectItem value="healthcare">Healthcare</SelectItem>
               <SelectItem value="restaurant">Restaurant</SelectItem>
               <SelectItem value="fast_food">Fast Food</SelectItem>
               <SelectItem value="tourism">Tourism</SelectItem>
+              <SelectItem value="automotive">Automotive</SelectItem>
+              <SelectItem value="hotel">Hotels</SelectItem>
+              <SelectItem value="entertainment">Entertainment</SelectItem>
+              <SelectItem value="pharmacy">Pharmacy</SelectItem>
+              <SelectItem value="beauty">Beauty & Personal Care</SelectItem>
+              <SelectItem value="business_services">Business Services</SelectItem>
+              <SelectItem value="ngo">NGO</SelectItem>
             </SelectContent>
           </Select>
           {/* Business Count */}
@@ -120,9 +133,22 @@ const BusinessPanel = ({
 
 const getMarkerColor = (type: string): string => {
   const colors = {
+    'banking': '#1f77b4',
+    'telecom': '#ff7f0e', 
+    'government': '#2ca02c',
+    'education': '#d62728',
+    'retail': '#9467bd',
+    'healthcare': '#8c564b',
     'restaurant': '#28a745',
     'fast_food': '#ffc107',
-    'tourism': '#dc3545'
+    'tourism': '#dc3545',
+    'automotive': '#17becf',
+    'hotel': '#bcbd22',
+    'entertainment': '#e377c2',
+    'pharmacy': '#7f7f7f',
+    'beauty': '#ff69b4',
+    'business_services': '#2e8b57',
+    'ngo': '#ff4500'
   };
   return colors[type as keyof typeof colors] || '#007bff';
 };
