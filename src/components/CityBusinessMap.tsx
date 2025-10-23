@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MapPin, Navigation, List, Loader2, LogOut } from 'lucide-react';
+import { MapPin, Navigation, List, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { useAuth } from '@/hooks/useAuth';
 import MapView from './MapView';
 import BusinessPanel from './BusinessPanel';
 import { Business, Coordinates } from '@/types/business';
@@ -12,7 +11,6 @@ import { getCityCoordinates, getCityFromCoordinates } from '@/utils/cityUtils';
 import { createSampleData } from '@/utils/businessUtils';
 
 const CityBusinessMap = () => {
-  const { user, signOut } = useAuth();
   const [currentCity, setCurrentCity] = useState('Bulawayo');
   const [currentCoordinates, setCurrentCoordinates] = useState<Coordinates>(
     getCityCoordinates('Bulawayo')!
@@ -131,27 +129,13 @@ const CityBusinessMap = () => {
       {/* Header */}
       <header className="bg-card border-b border-border p-4">
         <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-card-foreground">City Business Map</h1>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 <span>{currentCity}</span>
               </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                {user?.email}
-              </span>
-              <Button 
-                onClick={signOut}
-                variant="outline"
-                size="sm"
-              >
-                <LogOut className="h-4 w-4 mr-1" />
-                Sign Out
-              </Button>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-2">
