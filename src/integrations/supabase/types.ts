@@ -14,7 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      favorites: {
+        Row: {
+          business_id: number | null
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          metadata: Json | null
+          name: string
+          search_query: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          business_id?: number | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json | null
+          name: string
+          search_query?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          business_id?: number | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json | null
+          name?: string
+          search_query?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

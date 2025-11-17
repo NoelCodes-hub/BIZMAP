@@ -52,15 +52,27 @@ const MapView = ({ coordinates, targetCoordinates, onLandMarkerAdd }: MapViewPro
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Add double right-click event for land markers
-    const handleDoubleRightClick = (e: L.LeafletMouseEvent) => {
+    // Colors for different markers
+    const markerColors = [
+      'hsl(217, 91%, 60%)', // blue
+      'hsl(142, 76%, 36%)', // green
+      'hsl(346, 87%, 47%)', // red
+      'hsl(47, 96%, 53%)', // yellow
+      'hsl(280, 67%, 55%)', // purple
+      'hsl(33, 100%, 50%)', // orange
+    ];
+
+    // Add triple right-click event for land markers
+    const handleTripleRightClick = (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
+      const colorIndex = landMarkersRef.current.length % markerColors.length;
+      const markerColor = markerColors[colorIndex];
       
-      // Create land marker
+      // Create land marker with unique color
       const landMarker = L.marker([lat, lng], {
         icon: L.divIcon({
           className: 'custom-marker land-marker',
-          html: '<div style="background: hsl(var(--destructive)); width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"></div>',
+          html: `<div style="background: ${markerColor}; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"></div>`,
           iconSize: [24, 24],
           iconAnchor: [12, 12]
         })
@@ -68,10 +80,10 @@ const MapView = ({ coordinates, targetCoordinates, onLandMarkerAdd }: MapViewPro
 
       landMarker.bindPopup(`
         <div style="min-width: 150px;">
-          <h4 style="margin: 0 0 8px 0; color: #333;">Land Marker</h4>
+          <h4 style="margin: 0 0 8px 0; color: #333;">Land Marker ${landMarkersRef.current.length + 1}</h4>
           <p style="margin: 0; color: #666; font-size: 11px;">Lat: ${lat.toFixed(6)}</p>
           <p style="margin: 0; color: #666; font-size: 11px;">Lng: ${lng.toFixed(6)}</p>
-          <button onclick="this.closest('.leaflet-popup').remove(); document.querySelector('.leaflet-marker-pane').lastChild.remove();" style="margin-top: 8px; padding: 4px 8px; background: hsl(var(--destructive)); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Remove</button>
+          <button onclick="this.closest('.leaflet-popup').remove(); document.querySelector('.leaflet-marker-pane').lastChild.remove();" style="margin-top: 8px; padding: 4px 8px; background: ${markerColor}; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Remove</button>
         </div>
       `);
 
@@ -92,11 +104,16 @@ const MapView = ({ coordinates, targetCoordinates, onLandMarkerAdd }: MapViewPro
       if (rightClickCount === 1) {
         rightClickTimer = setTimeout(() => {
           rightClickCount = 0;
-        }, 300);
+        }, 400);
       } else if (rightClickCount === 2) {
+        // Wait for potential third click
+        rightClickTimer = setTimeout(() => {
+          rightClickCount = 0;
+        }, 400);
+      } else if (rightClickCount === 3) {
         clearTimeout(rightClickTimer);
         rightClickCount = 0;
-        handleDoubleRightClick(e);
+        handleTripleRightClick(e);
       }
     });
 
@@ -126,7 +143,7 @@ const MapView = ({ coordinates, targetCoordinates, onLandMarkerAdd }: MapViewPro
       mapRef.current.removeControl(routingControlRef.current);
     }
 
-    // Create new routing control
+    // Create new routing control with traffic consideration
     routingControlRef.current = (L as any).Routing.control({
       waypoints: [
         L.latLng(coordinates.lat, coordinates.lng),
@@ -136,9 +153,14 @@ const MapView = ({ coordinates, targetCoordinates, onLandMarkerAdd }: MapViewPro
       addWaypoints: false,
       draggableWaypoints: false,
       fitSelectedRoutes: true,
-      showAlternatives: false,
+      showAlternatives: true, // Show alternative routes for traffic
       lineOptions: {
-        styles: [{ color: 'hsl(217, 91%, 60%)', opacity: 0.8, weight: 6 }]
+        styles: [{ color: 'hsl(217, 91%, 60%)', opacity: 0.8, weight: 6 }],
+        extendToWaypoints: true,
+        missingRouteTolerance: 0
+      },
+      altLineOptions: {
+        styles: [{ color: 'hsl(217, 91%, 40%)', opacity: 0.5, weight: 4 }]
       },
       createMarker: () => null, // Don't create default markers
     }).addTo(mapRef.current);
