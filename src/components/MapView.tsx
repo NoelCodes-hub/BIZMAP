@@ -1,17 +1,21 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import 'leaflet-routing-machine';
 import { Coordinates } from '@/types/business';
 
 interface MapViewProps {
   coordinates: Coordinates;
+  targetCoordinates?: Coordinates | null;
   onLandMarkerAdd?: (coordinates: Coordinates) => void;
 }
 
-const MapView = ({ coordinates, onLandMarkerAdd }: MapViewProps) => {
+const MapView = ({ coordinates, targetCoordinates, onLandMarkerAdd }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const landMarkersRef = useRef<L.Marker[]>([]);
+  const routingControlRef = useRef<any>(null);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -105,6 +109,47 @@ const MapView = ({ coordinates, onLandMarkerAdd }: MapViewProps) => {
       }
     };
   }, [onLandMarkerAdd]);
+
+  // Handle routing
+  useEffect(() => {
+    if (!mapRef.current || !targetCoordinates) {
+      // Remove existing route if no target
+      if (routingControlRef.current) {
+        mapRef.current?.removeControl(routingControlRef.current);
+        routingControlRef.current = null;
+      }
+      return;
+    }
+
+    // Remove existing route
+    if (routingControlRef.current) {
+      mapRef.current.removeControl(routingControlRef.current);
+    }
+
+    // Create new routing control
+    routingControlRef.current = (L as any).Routing.control({
+      waypoints: [
+        L.latLng(coordinates.lat, coordinates.lng),
+        L.latLng(targetCoordinates.lat, targetCoordinates.lng)
+      ],
+      routeWhileDragging: false,
+      addWaypoints: false,
+      draggableWaypoints: false,
+      fitSelectedRoutes: true,
+      showAlternatives: false,
+      lineOptions: {
+        styles: [{ color: 'hsl(217, 91%, 60%)', opacity: 0.8, weight: 6 }]
+      },
+      createMarker: () => null, // Don't create default markers
+    }).addTo(mapRef.current);
+
+    return () => {
+      if (routingControlRef.current && mapRef.current) {
+        mapRef.current.removeControl(routingControlRef.current);
+        routingControlRef.current = null;
+      }
+    };
+  }, [coordinates, targetCoordinates]);
 
   const centerOnCoordinates = (coords: Coordinates, zoom = 16) => {
     if (mapRef.current) {
