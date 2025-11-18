@@ -111,7 +111,7 @@ const MapPage = () => {
       />
 
       {/* Favorites and Save buttons */}
-      <div className="absolute top-4 left-4 z-[1000] flex gap-2">
+      <div className="absolute top-4 left-20 z-[1000] flex gap-2">
         <Button
           onClick={() => setShowFavorites(!showFavorites)}
           variant="secondary"

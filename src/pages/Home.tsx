@@ -19,7 +19,7 @@ const Home = () => {
         </div>
         
         <div className="relative z-10 max-w-6xl mx-auto px-4 text-center">
-          <h1 className="text-6xl md:text-8xl font-bold mb-6 cosmic-gradient bg-clip-text text-transparent">
+          <h1 className="text-6xl md:text-8xl font-bold mb-6 text-foreground">
             BizMap
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-muted-foreground max-w-3xl mx-auto">
