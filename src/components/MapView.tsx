@@ -62,8 +62,8 @@ const MapView = ({ coordinates, targetCoordinates, onLandMarkerAdd }: MapViewPro
       'hsl(33, 100%, 50%)', // orange
     ];
 
-    // Add triple right-click event for land markers
-    const handleTripleRightClick = (e: L.LeafletMouseEvent) => {
+    // Add double right-click event for land markers
+    const handleDoubleRightClick = (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
       const colorIndex = landMarkersRef.current.length % markerColors.length;
       const markerColor = markerColors[colorIndex];
@@ -104,16 +104,11 @@ const MapView = ({ coordinates, targetCoordinates, onLandMarkerAdd }: MapViewPro
       if (rightClickCount === 1) {
         rightClickTimer = setTimeout(() => {
           rightClickCount = 0;
-        }, 400);
+        }, 300);
       } else if (rightClickCount === 2) {
-        // Wait for potential third click
-        rightClickTimer = setTimeout(() => {
-          rightClickCount = 0;
-        }, 400);
-      } else if (rightClickCount === 3) {
         clearTimeout(rightClickTimer);
         rightClickCount = 0;
-        handleTripleRightClick(e);
+        handleDoubleRightClick(e);
       }
     });
 
