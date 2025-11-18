@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
+import bizMapLogo from '@/assets/bizmap-logo.png';
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -37,9 +38,11 @@ const Dashboard = () => {
           {/* Logo */}
           <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
             {isSidebarOpen && (
-              <h1 className="text-lg font-bold text-sidebar-foreground cosmic-gradient bg-clip-text text-transparent">
-                GeoIntel Pro
-              </h1>
+              <img 
+                src={bizMapLogo} 
+                alt="BizMap Logo" 
+                className="h-10 w-auto object-contain"
+              />
             )}
             <Button
               variant="ghost"

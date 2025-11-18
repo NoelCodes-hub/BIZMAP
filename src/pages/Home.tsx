@@ -1,13 +1,22 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Map, TrendingUp, Globe, Zap } from 'lucide-react';
+import cityHero from '@/assets/city-hero.png';
 
 const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/10" />
+        {/* Dynamic City Background */}
+        <div className="absolute inset-0">
+          <img 
+            src={cityHero} 
+            alt="City aerial view" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/70 to-primary/30 backdrop-blur-sm" />
+        </div>
         
         <div className="relative z-10 max-w-6xl mx-auto px-4 text-center">
           <h1 className="text-6xl md:text-8xl font-bold mb-6 cosmic-gradient bg-clip-text text-transparent">
