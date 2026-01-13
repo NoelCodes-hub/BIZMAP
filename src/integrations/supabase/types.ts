@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          requirement_category: string | null
+          requirement_type: string
+          requirement_value: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon: string
+          id?: string
+          name: string
+          requirement_category?: string | null
+          requirement_type: string
+          requirement_value: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          requirement_category?: string | null
+          requirement_type?: string
+          requirement_value?: number
+        }
+        Relationships: []
+      }
+      business_stories: {
+        Row: {
+          business_id: string
+          business_name: string
+          content: string
+          created_at: string
+          expires_at: string
+          id: string
+          image_url: string | null
+          story_type: string
+          title: string
+          view_count: number
+        }
+        Insert: {
+          business_id: string
+          business_name: string
+          content: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          image_url?: string | null
+          story_type?: string
+          title: string
+          view_count?: number
+        }
+        Update: {
+          business_id?: string
+          business_name?: string
+          content?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          image_url?: string | null
+          story_type?: string
+          title?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           business_id: number | null
@@ -50,6 +149,173 @@ export type Database = {
           search_query?: string | null
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      live_business_metrics: {
+        Row: {
+          business_id: string
+          business_name: string
+          current_capacity: number | null
+          id: string
+          is_open: boolean
+          last_updated: string
+          max_capacity: number | null
+          parking_spots_available: number | null
+          wait_time_minutes: number | null
+        }
+        Insert: {
+          business_id: string
+          business_name: string
+          current_capacity?: number | null
+          id?: string
+          is_open?: boolean
+          last_updated?: string
+          max_capacity?: number | null
+          parking_spots_available?: number | null
+          wait_time_minutes?: number | null
+        }
+        Update: {
+          business_id?: string
+          business_name?: string
+          current_capacity?: number | null
+          id?: string
+          is_open?: boolean
+          last_updated?: string
+          max_capacity?: number | null
+          parking_spots_available?: number | null
+          wait_time_minutes?: number | null
+        }
+        Relationships: []
+      }
+      location_reminders: {
+        Row: {
+          business_id: string | null
+          business_name: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          latitude: number
+          longitude: number
+          reminder_text: string
+          trigger_radius_meters: number
+          triggered_at: string | null
+          user_id: string
+        }
+        Insert: {
+          business_id?: string | null
+          business_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude: number
+          longitude: number
+          reminder_text: string
+          trigger_radius_meters?: number
+          triggered_at?: string | null
+          user_id: string
+        }
+        Update: {
+          business_id?: string | null
+          business_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number
+          longitude?: number
+          reminder_text?: string
+          trigger_radius_meters?: number
+          triggered_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      micro_reviews: {
+        Row: {
+          business_id: string
+          business_name: string
+          created_at: string
+          id: string
+          tags: string[]
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          business_name: string
+          created_at?: string
+          id?: string
+          tags: string[]
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          business_name?: string
+          created_at?: string
+          id?: string
+          tags?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_visits: {
+        Row: {
+          business_id: string | null
+          category: string | null
+          id: string
+          latitude: number
+          location_name: string | null
+          longitude: number
+          user_id: string
+          visited_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          category?: string | null
+          id?: string
+          latitude: number
+          location_name?: string | null
+          longitude: number
+          user_id: string
+          visited_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          category?: string | null
+          id?: string
+          latitude?: number
+          location_name?: string | null
+          longitude?: number
+          user_id?: string
+          visited_at?: string
         }
         Relationships: []
       }
