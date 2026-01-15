@@ -113,6 +113,30 @@ export type Database = {
         }
         Relationships: []
       }
+      explored_cells: {
+        Row: {
+          cell_x: number
+          cell_y: number
+          explored_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          cell_x: number
+          cell_y: number
+          explored_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          cell_x?: number
+          cell_y?: number
+          explored_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           business_id: number | null
@@ -256,6 +280,86 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      place_playlists: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          name: string
+          share_code: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          share_code?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          share_code?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      playlist_items: {
+        Row: {
+          business_id: string
+          business_name: string
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          note: string | null
+          order_index: number
+          playlist_id: string
+        }
+        Insert: {
+          business_id: string
+          business_name: string
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          note?: string | null
+          order_index?: number
+          playlist_id: string
+        }
+        Update: {
+          business_id?: string
+          business_name?: string
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          note?: string | null
+          order_index?: number
+          playlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_items_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "place_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_badges: {
         Row: {

@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import { Sparkles, Award, Bell, BarChart3, Navigation, Radio } from 'lucide-react';
+import { Sparkles, Award, Bell, BarChart3, Navigation, Radio, ListMusic } from 'lucide-react';
 import SmartAIChat from './SmartAIChat';
 import BadgesPanel from './BadgesPanel';
 import LocationReminders from './LocationReminders';
 import PersonalInsights from './PersonalInsights';
 import MultiModalTransport from './MultiModalTransport';
 import LiveMetricsOverlay from './LiveMetricsOverlay';
+import PlacePlaylistPanel from './PlacePlaylistPanel';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-type TabType = 'ai' | 'badges' | 'reminders' | 'insights' | 'transport' | 'live';
+type TabType = 'ai' | 'badges' | 'reminders' | 'insights' | 'transport' | 'live' | 'playlists';
 
 const tabs = [
   { id: 'ai' as const, label: 'AI Chat', icon: Sparkles },
+  { id: 'playlists' as const, label: 'Playlists', icon: ListMusic },
   { id: 'live' as const, label: 'Live Data', icon: Radio },
   { id: 'badges' as const, label: 'Badges', icon: Award },
   { id: 'reminders' as const, label: 'Reminders', icon: Bell },
@@ -47,7 +49,8 @@ const SmartFeaturesHub = () => {
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'ai' && <SmartAIChat />}
-        {activeTab !== 'ai' && (
+        {activeTab === 'playlists' && <PlacePlaylistPanel />}
+        {activeTab !== 'ai' && activeTab !== 'playlists' && (
           <ScrollArea className="h-full p-4">
             {activeTab === 'live' && <LiveMetricsOverlay />}
             {activeTab === 'badges' && <BadgesPanel />}
