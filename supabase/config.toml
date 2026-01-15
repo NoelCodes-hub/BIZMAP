@@ -1,1 +1,7 @@
 project_id = "uwiixfnjvmhdpnmaveta"
+
+[functions.bizmap-ai]
+verify_jwt = false
+
+[functions.bizmap-search]
+verify_jwt = false
