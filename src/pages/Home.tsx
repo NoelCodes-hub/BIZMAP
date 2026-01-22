@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Map, TrendingUp, Globe, Zap } from 'lucide-react';
+import { Map, TrendingUp, Globe, Zap, ShoppingBag } from 'lucide-react';
 import cityHero from '@/assets/city-hero.png';
 
 const Home = () => {
@@ -30,6 +30,12 @@ const Home = () => {
               <Button size="lg" className="cosmic-gradient text-white text-lg px-8">
                 <Map className="mr-2 h-5 w-5" />
                 Explore Map
+              </Button>
+            </Link>
+            <Link to="/products">
+              <Button size="lg" variant="secondary" className="text-lg px-8">
+                <ShoppingBag className="mr-2 h-5 w-5" />
+                Find Products
               </Button>
             </Link>
             <Link to="/chat">
