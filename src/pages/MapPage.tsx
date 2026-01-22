@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import ClusteredMapView from '@/components/ClusteredMapView';
@@ -16,14 +17,17 @@ const MapPage = () => {
   const [currentCoordinates, setCurrentCoordinates] = useState<Coordinates>(
     getCityCoordinates('Bulawayo')!
   );
+  const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [targetMarker, setTargetMarker] = useState<Coordinates | null>(null);
   const [isRoutingActive, setIsRoutingActive] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([]);
+  const mapRef = useRef<{ centerOnUser: () => void } | null>(null);
   
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const { getUserLocation } = useGeolocation();
+  const { getUserLocation, isLoading: isGettingLocation } = useGeolocation();
   const { addFavorite } = useFavorites();
   
   // Get all businesses for current location
@@ -52,45 +56,67 @@ const MapPage = () => {
   const handleNavigateToUser = async () => {
     try {
       const coords = await getUserLocation();
+      setUserLocation(coords);
       setCurrentCoordinates(coords);
       toast({
         title: "Location updated",
-        description: "Map centered on your location",
+        description: `Located at ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
       });
     } catch (error) {
       toast({
         title: "Location error",
-        description: "Could not get your location",
+        description: "Could not get your location. Please enable location services.",
         variant: "destructive",
       });
     }
   };
 
-  const handleProductSearch = (query: string) => {
-    toast({
-      title: "Searching...",
-      description: `Looking for businesses offering "${query}"`,
-    });
-    // Implement product search logic here
-  };
-
-  const handleRouteRequest = useCallback(() => {
-    if (targetMarker) {
-      setIsRoutingActive(!isRoutingActive);
+  const handleRecenterMap = useCallback(() => {
+    if (userLocation) {
+      setCurrentCoordinates(userLocation);
       toast({
-        title: isRoutingActive ? "Route cleared" : "Route activated",
-        description: isRoutingActive 
-          ? "Navigation route removed" 
-          : "Showing route to marker",
+        title: "Map recentered",
+        description: "Returned to your location",
       });
     } else {
+      // If no user location yet, get it first
+      handleNavigateToUser();
+    }
+  }, [userLocation, toast]);
+
+  const handleGoToProducts = () => {
+    navigate('/products');
+  };
+
+  const handleRouteToggle = useCallback(() => {
+    if (!targetMarker) {
       toast({
-        title: "No destination",
-        description: "Double right-click to place a marker first",
+        title: "No destination set",
+        description: "Double right-click on the map to place a destination marker first",
         variant: "destructive",
       });
+      return;
     }
+
+    const newRoutingState = !isRoutingActive;
+    setIsRoutingActive(newRoutingState);
+    
+    toast({
+      title: newRoutingState ? "Route activated" : "Route deactivated",
+      description: newRoutingState 
+        ? "Showing road route to destination" 
+        : "Route cleared from map",
+    });
   }, [targetMarker, isRoutingActive, toast]);
+
+  const handleClearRoute = useCallback(() => {
+    setIsRoutingActive(false);
+    setTargetMarker(null);
+    toast({
+      title: "Route cleared",
+      description: "Destination marker and route removed",
+    });
+  }, [toast]);
 
   const handleLandMarkerAdd = useCallback((coords: Coordinates) => {
     setTargetMarker(coords);
@@ -135,9 +161,12 @@ const MapPage = () => {
       
       <MapControls
         onNavigateToUser={handleNavigateToUser}
-        onProductSearch={handleProductSearch}
-        onRouteRequest={handleRouteRequest}
+        onRecenterMap={handleRecenterMap}
+        onGoToProducts={handleGoToProducts}
+        onRouteToggle={handleRouteToggle}
+        onClearRoute={handleClearRoute}
         isRoutingActive={isRoutingActive}
+        isGettingLocation={isGettingLocation}
       />
 
       {/* AI Search Panel */}
