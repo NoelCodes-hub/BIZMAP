@@ -9,6 +9,7 @@ import MapPage from "./pages/MapPage";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import Tools from "./pages/Tools";
 import Chat from "./pages/Chat";
+import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="knowledge" element={<KnowledgeBase />} />
             <Route path="tools" element={<Tools />} />
             <Route path="chat" element={<Chat />} />
+            <Route path="products" element={<Products />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

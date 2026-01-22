@@ -1,13 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import MapView from '@/components/MapView';
+import ClusteredMapView from '@/components/ClusteredMapView';
 import MapControls from '@/components/MapControls';
 import FavoritesPanel from '@/components/FavoritesPanel';
-import { Coordinates } from '@/types/business';
+import ConversationalSearch from '@/components/smart/ConversationalSearch';
+import { Coordinates, Business } from '@/types/business';
 import { getCityCoordinates } from '@/utils/cityUtils';
+import { createSampleData } from '@/utils/businessUtils';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Star } from 'lucide-react';
+import { Star, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const MapPage = () => {
@@ -17,10 +19,35 @@ const MapPage = () => {
   const [targetMarker, setTargetMarker] = useState<Coordinates | null>(null);
   const [isRoutingActive, setIsRoutingActive] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([]);
   
   const { toast } = useToast();
   const { getUserLocation } = useGeolocation();
   const { addFavorite } = useFavorites();
+  
+  // Get all businesses for current location
+  const allBusinesses = useMemo(() => 
+    createSampleData(currentCoordinates, 'Bulawayo'), 
+    [currentCoordinates]
+  );
+  
+  // Use filtered businesses if search is active, otherwise all
+  const displayedBusinesses = filteredBusinesses.length > 0 || showSearch 
+    ? filteredBusinesses 
+    : allBusinesses;
+
+  const handleSearchResults = useCallback((businesses: Business[]) => {
+    setFilteredBusinesses(businesses);
+  }, []);
+
+  const handleBusinessSelect = useCallback((business: Business) => {
+    setCurrentCoordinates({ lat: business.latitude, lng: business.longitude });
+    toast({
+      title: business.name,
+      description: business.address,
+    });
+  }, [toast]);
 
   const handleNavigateToUser = async () => {
     try {
@@ -97,10 +124,13 @@ const MapPage = () => {
 
   return (
     <div className="relative h-screen">
-      <MapView
+      <ClusteredMapView
         coordinates={currentCoordinates}
+        businesses={displayedBusinesses}
         targetCoordinates={isRoutingActive ? targetMarker : undefined}
         onLandMarkerAdd={handleLandMarkerAdd}
+        onBusinessSelect={handleBusinessSelect}
+        showHeatmap={false}
       />
       
       <MapControls
@@ -110,8 +140,42 @@ const MapPage = () => {
         isRoutingActive={isRoutingActive}
       />
 
-      {/* Favorites and Save buttons */}
+      {/* AI Search Panel */}
+      {showSearch && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-lg px-4">
+          <div className="bg-card border border-border rounded-lg shadow-xl p-4">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                AI Search
+              </h3>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                setShowSearch(false);
+                setFilteredBusinesses([]);
+              }}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <ConversationalSearch
+              businesses={allBusinesses}
+              onResultsFound={handleSearchResults}
+              onBusinessSelect={handleBusinessSelect}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Favorites, Save, and Search buttons */}
       <div className="absolute top-4 left-20 z-[1000] flex gap-2">
+        <Button
+          onClick={() => setShowSearch(!showSearch)}
+          variant="secondary"
+          size="sm"
+          className="shadow-lg"
+        >
+          <Sparkles className="h-4 w-4 mr-2" />
+          AI Search
+        </Button>
         <Button
           onClick={() => setShowFavorites(!showFavorites)}
           variant="secondary"
