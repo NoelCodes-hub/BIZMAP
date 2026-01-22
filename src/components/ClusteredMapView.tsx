@@ -18,9 +18,20 @@ interface ClusteredMapViewProps {
   targetCoordinates?: Coordinates | null;
   showHeatmap?: boolean;
   showFogOfWar?: boolean;
+  enableLiveTracking?: boolean;
   onBusinessSelect?: (business: Business) => void;
   onLandMarkerAdd?: (coordinates: Coordinates) => void;
 }
+
+// Marker colors that cycle on double-click
+const MARKER_COLORS = [
+  'hsl(280, 70%, 60%)',  // Purple
+  'hsl(340, 82%, 52%)',  // Pink
+  'hsl(25, 95%, 53%)',   // Orange
+  'hsl(142, 71%, 45%)',  // Green
+  'hsl(190, 95%, 50%)',  // Cyan
+  'hsl(47, 96%, 53%)',   // Yellow
+];
 
 const ClusteredMapView = ({ 
   coordinates, 
@@ -29,6 +40,7 @@ const ClusteredMapView = ({
   targetCoordinates,
   showHeatmap = false,
   showFogOfWar = false,
+  enableLiveTracking = false,
   onBusinessSelect,
   onLandMarkerAdd
 }: ClusteredMapViewProps) => {
@@ -37,7 +49,26 @@ const ClusteredMapView = ({
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const heatLayerRef = useRef<any>(null);
   const routingControlRef = useRef<any>(null);
+  const userMarkerRef = useRef<L.Marker | null>(null);
+  const landMarkersRef = useRef<L.Marker[]>([]);
+  const colorIndexRef = useRef(0);
   const [mapReady, setMapReady] = useState(false);
+
+  // Create pulsing user marker icon
+  const createUserMarkerIcon = () => {
+    return L.divIcon({
+      className: 'user-marker-pulsing',
+      html: `
+        <div class="user-location-container">
+          <div class="user-pulse-ring"></div>
+          <div class="user-pulse-ring delay"></div>
+          <div class="user-dot"></div>
+        </div>
+      `,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+  };
 
   // Initialize map
   useEffect(() => {
@@ -50,20 +81,9 @@ const ClusteredMapView = ({
       maxZoom: 19
     }).addTo(mapRef.current);
 
-    // User location marker
-    L.marker([coordinates.lat, coordinates.lng], {
-      icon: L.divIcon({
-        className: 'user-marker',
-        html: `<div style="
-          width: 24px; height: 24px; 
-          background: hsl(217, 91%, 60%); 
-          border: 3px solid white; 
-          border-radius: 50%;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        "></div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      })
+    // User location marker with pulsing effect
+    userMarkerRef.current = L.marker([coordinates.lat, coordinates.lng], {
+      icon: createUserMarkerIcon()
     }).addTo(mapRef.current)
       .bindPopup('<strong>Your Location</strong>');
 
@@ -110,7 +130,7 @@ const ClusteredMapView = ({
     mapRef.current.addLayer(clusterGroupRef.current);
     setMapReady(true);
 
-    // Double right-click for land markers
+    // Double right-click for land markers with color cycling
     let rightClickCount = 0;
     let rightClickTimer: NodeJS.Timeout;
 
@@ -123,20 +143,27 @@ const ClusteredMapView = ({
         rightClickCount = 0;
         onLandMarkerAdd?.({ lat: e.latlng.lat, lng: e.latlng.lng });
         
-        L.marker([e.latlng.lat, e.latlng.lng], {
+        // Get next color in cycle
+        const color = MARKER_COLORS[colorIndexRef.current % MARKER_COLORS.length];
+        colorIndexRef.current++;
+        
+        const marker = L.marker([e.latlng.lat, e.latlng.lng], {
           icon: L.divIcon({
             html: `<div style="
               width: 24px; height: 24px;
-              background: hsl(280, 70%, 60%);
+              background: ${color};
               border: 3px solid white;
               border-radius: 50%;
               box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+              transition: transform 0.2s;
             "></div>`,
             iconSize: [24, 24],
             iconAnchor: [12, 12]
           })
         }).addTo(mapRef.current!)
           .bindPopup(`<strong>Marker</strong><br>Lat: ${e.latlng.lat.toFixed(5)}<br>Lng: ${e.latlng.lng.toFixed(5)}`);
+        
+        landMarkersRef.current.push(marker);
       }
     });
 
@@ -148,12 +175,43 @@ const ClusteredMapView = ({
     };
   }, []);
 
-  // Update center when coordinates change
+  // Update center and user marker when coordinates change
   useEffect(() => {
     if (mapRef.current) {
       mapRef.current.setView([coordinates.lat, coordinates.lng], mapRef.current.getZoom());
+      
+      // Update user marker position for live tracking
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setLatLng([coordinates.lat, coordinates.lng]);
+      }
     }
   }, [coordinates]);
+
+  // Live GPS tracking effect
+  useEffect(() => {
+    if (!enableLiveTracking || !navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        if (userMarkerRef.current && mapRef.current) {
+          userMarkerRef.current.setLatLng([latitude, longitude]);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 5000
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [enableLiveTracking]);
 
   // Add business markers to cluster
   useEffect(() => {
@@ -265,6 +323,53 @@ const ClusteredMapView = ({
         @keyframes pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
+        }
+        
+        .user-location-container {
+          position: relative;
+          width: 40px;
+          height: 40px;
+        }
+        
+        .user-pulse-ring {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 40px;
+          height: 40px;
+          margin: -20px 0 0 -20px;
+          border-radius: 50%;
+          background: hsl(217, 91%, 60%);
+          opacity: 0;
+          animation: userPulse 2s ease-out infinite;
+        }
+        
+        .user-pulse-ring.delay {
+          animation-delay: 1s;
+        }
+        
+        .user-dot {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 16px;
+          height: 16px;
+          margin: -8px 0 0 -8px;
+          background: hsl(217, 91%, 60%);
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes userPulse {
+          0% {
+            transform: scale(0.5);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(2);
+            opacity: 0;
+          }
         }
       `}</style>
     </div>

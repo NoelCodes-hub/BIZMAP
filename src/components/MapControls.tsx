@@ -1,4 +1,4 @@
-import { Navigation, Compass, Search, Route } from 'lucide-react';
+import { Navigation, Compass, Search, Route, X } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface MapControlsProps {
@@ -9,6 +9,7 @@ interface MapControlsProps {
   onClearRoute: () => void;
   isRoutingActive: boolean;
   isGettingLocation?: boolean;
+  hasTargetMarker?: boolean;
 }
 
 const MapControls = ({ 
@@ -18,7 +19,8 @@ const MapControls = ({
   onRouteToggle,
   onClearRoute,
   isRoutingActive,
-  isGettingLocation = false
+  isGettingLocation = false,
+  hasTargetMarker = false
 }: MapControlsProps) => {
 
   return (
@@ -52,6 +54,18 @@ const MapControls = ({
       >
         <Route className="h-5 w-5" />
       </Button>
+
+      {/* Clear Route - only show when there's a target marker or active route */}
+      {(hasTargetMarker || isRoutingActive) && (
+        <Button
+          onClick={onClearRoute}
+          variant="destructive"
+          className="w-12 h-12 p-0"
+          title="Clear route and markers"
+        >
+          <X className="h-5 w-5" />
+        </Button>
+      )}
 
       {/* Recenter Map */}
       <Button

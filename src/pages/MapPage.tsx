@@ -157,6 +157,7 @@ const MapPage = () => {
         onLandMarkerAdd={handleLandMarkerAdd}
         onBusinessSelect={handleBusinessSelect}
         showHeatmap={false}
+        enableLiveTracking={!!userLocation}
       />
       
       <MapControls
@@ -167,6 +168,7 @@ const MapPage = () => {
         onClearRoute={handleClearRoute}
         isRoutingActive={isRoutingActive}
         isGettingLocation={isGettingLocation}
+        hasTargetMarker={!!targetMarker}
       />
 
       {/* AI Search Panel */}
