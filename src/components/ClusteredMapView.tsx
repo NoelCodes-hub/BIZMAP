@@ -130,6 +130,56 @@ const ClusteredMapView = ({
     mapRef.current.addLayer(clusterGroupRef.current);
     setMapReady(true);
 
+    // Helper to create marker popup with actions
+    const createMarkerPopup = (marker: L.Marker, markerIndex: number, currentColor: string) => {
+      const colorButtons = MARKER_COLORS.map((c, i) => 
+        `<button class="land-marker-color-btn" data-color="${c}" data-index="${i}" style="
+          width: 20px; height: 20px;
+          background: ${c};
+          border: 2px solid ${c === currentColor ? 'hsl(217, 91%, 60%)' : 'white'};
+          border-radius: 50%;
+          cursor: pointer;
+          margin: 2px;
+        "></button>`
+      ).join('');
+
+      return `
+        <div class="land-marker-popup" data-marker-index="${markerIndex}">
+          <strong>Marker</strong>
+          <div style="margin: 8px 0; display: flex; flex-wrap: wrap; gap: 2px;">
+            ${colorButtons}
+          </div>
+          <button class="land-marker-delete-btn" style="
+            width: 100%;
+            padding: 6px 12px;
+            background: hsl(0, 72%, 51%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+          ">Delete Marker</button>
+        </div>
+      `;
+    };
+
+    // Helper to update marker icon color
+    const updateMarkerColor = (marker: L.Marker, color: string) => {
+      marker.setIcon(L.divIcon({
+        html: `<div style="
+          width: 24px; height: 24px;
+          background: ${color};
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+          transition: transform 0.2s;
+        "></div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      }));
+    };
+
     // Double right-click for land markers with color cycling
     let rightClickCount = 0;
     let rightClickTimer: NodeJS.Timeout;
@@ -146,6 +196,7 @@ const ClusteredMapView = ({
         // Get next color in cycle
         const color = MARKER_COLORS[colorIndexRef.current % MARKER_COLORS.length];
         colorIndexRef.current++;
+        const markerIndex = landMarkersRef.current.length;
         
         const marker = L.marker([e.latlng.lat, e.latlng.lng], {
           icon: L.divIcon({
@@ -160,8 +211,43 @@ const ClusteredMapView = ({
             iconSize: [24, 24],
             iconAnchor: [12, 12]
           })
-        }).addTo(mapRef.current!)
-          .bindPopup(`<strong>Marker</strong><br>Lat: ${e.latlng.lat.toFixed(5)}<br>Lng: ${e.latlng.lng.toFixed(5)}`);
+        }).addTo(mapRef.current!);
+
+        // Store current color on marker
+        (marker as any)._currentColor = color;
+        
+        marker.bindPopup(createMarkerPopup(marker, markerIndex, color));
+        
+        // Handle popup open to attach event listeners
+        marker.on('popupopen', () => {
+          const popup = marker.getPopup();
+          if (!popup) return;
+          
+          const container = popup.getElement();
+          if (!container) return;
+
+          // Color change buttons
+          container.querySelectorAll('.land-marker-color-btn').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+              const newColor = (e.target as HTMLElement).dataset.color;
+              if (newColor) {
+                (marker as any)._currentColor = newColor;
+                updateMarkerColor(marker, newColor);
+                marker.setPopupContent(createMarkerPopup(marker, markerIndex, newColor));
+              }
+            });
+          });
+
+          // Delete button
+          container.querySelector('.land-marker-delete-btn')?.addEventListener('click', () => {
+            marker.closePopup();
+            mapRef.current?.removeLayer(marker);
+            const idx = landMarkersRef.current.indexOf(marker);
+            if (idx > -1) {
+              landMarkersRef.current.splice(idx, 1);
+            }
+          });
+        });
         
         landMarkersRef.current.push(marker);
       }
