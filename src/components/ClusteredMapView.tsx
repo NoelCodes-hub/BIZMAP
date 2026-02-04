@@ -131,7 +131,7 @@ const ClusteredMapView = ({
     setMapReady(true);
 
     // Helper to create marker popup with actions
-    const createMarkerPopup = (marker: L.Marker, markerIndex: number, currentColor: string) => {
+    const createMarkerPopup = (marker: L.Marker, markerIndex: number, currentColor: string, currentLabel: string) => {
       const colorButtons = MARKER_COLORS.map((c, i) => 
         `<button class="land-marker-color-btn" data-color="${c}" data-index="${i}" style="
           width: 20px; height: 20px;
@@ -145,7 +145,15 @@ const ClusteredMapView = ({
 
       return `
         <div class="land-marker-popup" data-marker-index="${markerIndex}">
-          <strong>Marker</strong>
+          <input type="text" class="land-marker-label-input" value="${currentLabel}" placeholder="Enter label..." style="
+            width: 100%;
+            padding: 8px;
+            border: 1px solid hsl(217, 91%, 60%);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            outline: none;
+          " />
           <div style="margin: 8px 0; display: flex; flex-wrap: wrap; gap: 2px;">
             ${colorButtons}
           </div>
@@ -164,18 +172,41 @@ const ClusteredMapView = ({
       `;
     };
 
-    // Helper to update marker icon color
-    const updateMarkerColor = (marker: L.Marker, color: string) => {
+    // Helper to update marker icon with color and label
+    const updateMarkerIcon = (marker: L.Marker, color: string, label: string) => {
+      const hasLabel = label.trim().length > 0;
       marker.setIcon(L.divIcon({
         html: `<div style="
-          width: 24px; height: 24px;
-          background: ${color};
-          border: 3px solid white;
-          border-radius: 50%;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-          transition: transform 0.2s;
-        "></div>`,
-        iconSize: [24, 24],
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        ">
+          <div style="
+            width: 24px; height: 24px;
+            background: ${color};
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: transform 0.2s;
+          "></div>
+          ${hasLabel ? `<div style="
+            position: absolute;
+            top: 28px;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: ${color};
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          ">${label}</div>` : ''}
+        </div>`,
+        iconSize: [24, hasLabel ? 50 : 24],
         iconAnchor: [12, 12]
       }));
     };
@@ -213,10 +244,11 @@ const ClusteredMapView = ({
           })
         }).addTo(mapRef.current!);
 
-        // Store current color on marker
+        // Store current color and label on marker
         (marker as any)._currentColor = color;
+        (marker as any)._currentLabel = '';
         
-        marker.bindPopup(createMarkerPopup(marker, markerIndex, color));
+        marker.bindPopup(createMarkerPopup(marker, markerIndex, color, ''));
         
         // Handle popup open to attach event listeners
         marker.on('popupopen', () => {
@@ -226,14 +258,31 @@ const ClusteredMapView = ({
           const container = popup.getElement();
           if (!container) return;
 
+          // Label input
+          const labelInput = container.querySelector('.land-marker-label-input') as HTMLInputElement;
+          labelInput?.addEventListener('change', (e) => {
+            const newLabel = (e.target as HTMLInputElement).value;
+            (marker as any)._currentLabel = newLabel;
+            updateMarkerIcon(marker, (marker as any)._currentColor, newLabel);
+          });
+          labelInput?.addEventListener('keypress', (e) => {
+            if ((e as KeyboardEvent).key === 'Enter') {
+              const newLabel = (e.target as HTMLInputElement).value;
+              (marker as any)._currentLabel = newLabel;
+              updateMarkerIcon(marker, (marker as any)._currentColor, newLabel);
+              marker.closePopup();
+            }
+          });
+
           // Color change buttons
           container.querySelectorAll('.land-marker-color-btn').forEach((btn) => {
             btn.addEventListener('click', (e) => {
               const newColor = (e.target as HTMLElement).dataset.color;
               if (newColor) {
                 (marker as any)._currentColor = newColor;
-                updateMarkerColor(marker, newColor);
-                marker.setPopupContent(createMarkerPopup(marker, markerIndex, newColor));
+                const currentLabel = (marker as any)._currentLabel || '';
+                updateMarkerIcon(marker, newColor, currentLabel);
+                marker.setPopupContent(createMarkerPopup(marker, markerIndex, newColor, currentLabel));
               }
             });
           });
