@@ -1,19 +1,34 @@
-import { Link } from 'react-router-dom';
-import { MapPin, Star, Percent, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Product } from '@/data/products';
+ import { useState } from 'react';
+ import { Link } from 'react-router-dom';
+ import { MapPin, Star, Percent, Sparkles, ShoppingCart, Check } from 'lucide-react';
+ import { Button } from '@/components/ui/button';
+ import { Badge } from '@/components/ui/badge';
+ import { Card, CardContent } from '@/components/ui/card';
+ import { AspectRatio } from '@/components/ui/aspect-ratio';
+ import { Product } from '@/data/products';
+ import { useCartContext } from '@/contexts/CartContext';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
+   const { addItem, items } = useCartContext();
+   const [justAdded, setJustAdded] = useState(false);
+ 
   const discountedPrice = product.discount 
     ? product.price * (1 - product.discount / 100) 
     : null;
+ 
+   const isInCart = items.some(item => item.product.id === product.id);
+ 
+   const handleAddToCart = (e: React.MouseEvent) => {
+     e.preventDefault();
+     e.stopPropagation();
+     addItem(product);
+     setJustAdded(true);
+     setTimeout(() => setJustAdded(false), 1500);
+   };
 
   return (
     <Card className="group overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1">
@@ -116,17 +131,38 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </div>
         </div>
         
-        {/* Action Button */}
-        <Link to="/map" className="block pt-2">
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
-          >
-            <MapPin className="w-4 h-4 mr-2" />
-            View on Map
-          </Button>
-        </Link>
+         {/* Action Buttons */}
+         <div className="flex gap-2 pt-2">
+           <Button 
+             variant={justAdded || isInCart ? "secondary" : "default"}
+             size="sm" 
+             className="flex-1"
+             onClick={handleAddToCart}
+             disabled={justAdded || !product.inStock}
+           >
+             {justAdded ? (
+               <>
+                 <Check className="w-4 h-4 mr-1" />
+                 Added!
+               </>
+             ) : isInCart ? (
+               <>
+                 <ShoppingCart className="w-4 h-4 mr-1" />
+                 Add More
+               </>
+             ) : (
+               <>
+                 <ShoppingCart className="w-4 h-4 mr-1" />
+                 Add to Cart
+               </>
+             )}
+           </Button>
+           <Link to="/map">
+             <Button variant="outline" size="sm" className="px-3">
+               <MapPin className="w-4 h-4" />
+             </Button>
+           </Link>
+         </div>
       </CardContent>
     </Card>
   );

@@ -1,13 +1,14 @@
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Filter, ArrowLeft, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import ProductCard from '@/components/products/ProductCard';
-import { products, categories, subcategories } from '@/data/products';
+ import { useState, useMemo } from 'react';
+ import { Link } from 'react-router-dom';
+ import { Search, Filter, ArrowLeft, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
+ import { Input } from '@/components/ui/input';
+ import { Button } from '@/components/ui/button';
+ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+ import { ScrollArea } from '@/components/ui/scroll-area';
+ import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+ import ProductCard from '@/components/products/ProductCard';
+ import CartDrawer from '@/components/products/CartDrawer';
+ import { products, categories, subcategories } from '@/data/products';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -83,22 +84,25 @@ const Products = () => {
 
       <div className="relative z-10 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <Link to="/">
-              <Button variant="ghost" size="icon" className="bg-card/50 backdrop-blur-sm hover:bg-card/80">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Product Catalogue
-              </h1>
-              <p className="text-muted-foreground">
-                Discover {products.length.toLocaleString()}+ products across Bulawayo
-              </p>
-            </div>
-          </div>
+           {/* Header */}
+           <div className="flex items-center justify-between mb-8">
+             <div className="flex items-center gap-4">
+               <Link to="/">
+                 <Button variant="ghost" size="icon" className="bg-card/50 backdrop-blur-sm hover:bg-card/80">
+                   <ArrowLeft className="h-5 w-5" />
+                 </Button>
+               </Link>
+               <div>
+                 <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                   Product Catalogue
+                 </h1>
+                 <p className="text-muted-foreground">
+                   Discover {products.length.toLocaleString()}+ products across Bulawayo
+                 </p>
+               </div>
+             </div>
+             <CartDrawer />
+           </div>
 
           {/* Search & Filters */}
           <div className="bg-card/60 backdrop-blur-md rounded-xl p-4 mb-6 border border-border/50 shadow-xl">
