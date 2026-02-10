@@ -1,16 +1,18 @@
- import { useState, useMemo } from 'react';
- import { Link } from 'react-router-dom';
- import { Search, Filter, ArrowLeft, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
- import { Input } from '@/components/ui/input';
- import { Button } from '@/components/ui/button';
- import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
- import { ScrollArea } from '@/components/ui/scroll-area';
- import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
- import ProductCard from '@/components/products/ProductCard';
- import CartDrawer from '@/components/products/CartDrawer';
- import { products, categories, subcategories } from '@/data/products';
+import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { Search, Filter, ArrowLeft, SlidersHorizontal, Grid3X3, LayoutGrid, DollarSign } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Slider } from '@/components/ui/slider';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import ProductCard from '@/components/products/ProductCard';
+import CartDrawer from '@/components/products/CartDrawer';
+import { products, categories, subcategories } from '@/data/products';
 
 const ITEMS_PER_PAGE = 24;
+const MAX_PRICE = Math.ceil(Math.max(...products.map(p => p.price)));
 
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,6 +21,7 @@ const Products = () => {
   const [sortBy, setSortBy] = useState<string>('featured');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'compact'>('grid');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, MAX_PRICE]);
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
@@ -41,17 +44,18 @@ const Products = () => {
       filtered = filtered.filter(p => p.subcategory === selectedSubcategory);
     }
 
+    filtered = filtered.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+
     filtered = [...filtered].sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
       if (sortBy === 'price-high') return b.price - a.price;
       if (sortBy === 'rating') return b.rating - a.rating;
       if (sortBy === 'newest') return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
-      // Featured - prioritize featured and discounted items
       return ((b.isFeatured ? 2 : 0) + (b.discount ? 1 : 0)) - ((a.isFeatured ? 2 : 0) + (a.discount ? 1 : 0));
     });
 
     return filtered;
-  }, [searchQuery, selectedCategory, selectedSubcategory, sortBy]);
+  }, [searchQuery, selectedCategory, selectedSubcategory, sortBy, priceRange]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = filteredProducts.slice(
@@ -162,6 +166,26 @@ const Products = () => {
                   </Button>
                 </div>
               </div>
+            </div>
+            {/* Price Range Slider */}
+            <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border/30">
+              <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
+                ${priceRange[0]} – ${priceRange[1]}
+              </span>
+              <Slider
+                min={0}
+                max={MAX_PRICE}
+                step={1}
+                value={priceRange}
+                onValueChange={(v) => { setPriceRange(v as [number, number]); setCurrentPage(1); }}
+                className="flex-1"
+              />
+              {(priceRange[0] > 0 || priceRange[1] < MAX_PRICE) && (
+                <Button variant="ghost" size="sm" className="text-xs" onClick={() => setPriceRange([0, MAX_PRICE])}>
+                  Reset
+                </Button>
+              )}
             </div>
           </div>
 
