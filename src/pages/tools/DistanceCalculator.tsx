@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Trash2, Calculator, RotateCcw } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,8 +24,11 @@ const haversineDistance = (lat1: number, lng1: number, lat2: number, lng2: numbe
 };
 
 const DistanceCalculator = () => {
+  const location = useLocation();
+  const mapCoords = location.state as { lat?: number; lng?: number } | null;
+  
   const [points, setPoints] = useState<Point[]>([
-    { id: '1', name: 'Point A', lat: '', lng: '' },
+    { id: '1', name: 'Point A', lat: mapCoords?.lat?.toString() ?? '', lng: mapCoords?.lng?.toString() ?? '' },
     { id: '2', name: 'Point B', lat: '', lng: '' },
   ]);
   const [results, setResults] = useState<{ from: string; to: string; distance: number }[] | null>(null);

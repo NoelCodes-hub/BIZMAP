@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Plus, Trash2, Route, RotateCcw, ArrowDown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,8 +42,11 @@ const optimizeRoute = (stops: { name: string; lat: number; lng: number }[]) => {
 };
 
 const RouteOptimizer = () => {
+  const location = useLocation();
+  const mapCoords = location.state as { lat?: number; lng?: number } | null;
+  
   const [stops, setStops] = useState<Stop[]>([
-    { id: '1', name: 'Start', lat: '', lng: '' },
+    { id: '1', name: 'Start', lat: mapCoords?.lat?.toString() ?? '', lng: mapCoords?.lng?.toString() ?? '' },
     { id: '2', name: 'Stop 1', lat: '', lng: '' },
     { id: '3', name: 'Stop 2', lat: '', lng: '' },
   ]);

@@ -10,7 +10,7 @@ import { Coordinates, Business } from '@/types/business';
 import { getCityCoordinates } from '@/utils/cityUtils';
 import { createSampleData } from '@/utils/businessUtils';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Star, Sparkles, X } from 'lucide-react';
+import { Star, Sparkles, X, Crosshair, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const MapPage = () => {
@@ -23,20 +23,20 @@ const MapPage = () => {
   const [showFavorites, setShowFavorites] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([]);
-  const mapRef = useRef<{ centerOnUser: () => void } | null>(null);
+  const [coordinatePickerMode, setCoordinatePickerMode] = useState(false);
+  const [pickedCoords, setPickedCoords] = useState<Coordinates | null>(null);
+  const [copiedCoords, setCopiedCoords] = useState(false);
   
   const navigate = useNavigate();
   const { toast } = useToast();
   const { getUserLocation, isLoading: isGettingLocation } = useGeolocation();
   const { addFavorite } = useFavorites();
   
-  // Get all businesses for current location
   const allBusinesses = useMemo(() => 
     createSampleData(currentCoordinates, 'Bulawayo'), 
     [currentCoordinates]
   );
   
-  // Use filtered businesses if search is active, otherwise all
   const displayedBusinesses = filteredBusinesses.length > 0 || showSearch 
     ? filteredBusinesses 
     : allBusinesses;
@@ -47,10 +47,7 @@ const MapPage = () => {
 
   const handleBusinessSelect = useCallback((business: Business) => {
     setCurrentCoordinates({ lat: business.latitude, lng: business.longitude });
-    toast({
-      title: business.name,
-      description: business.address,
-    });
+    toast({ title: business.name, description: business.address });
   }, [toast]);
 
   const handleNavigateToUser = async () => {
@@ -58,95 +55,67 @@ const MapPage = () => {
       const coords = await getUserLocation();
       setUserLocation(coords);
       setCurrentCoordinates(coords);
-      toast({
-        title: "Location updated",
-        description: `Located at ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Location error",
-        description: "Could not get your location. Please enable location services.",
-        variant: "destructive",
-      });
+      toast({ title: "Location updated", description: `Located at ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` });
+    } catch {
+      toast({ title: "Location error", description: "Could not get your location. Please enable location services.", variant: "destructive" });
     }
   };
 
   const handleRecenterMap = useCallback(() => {
     if (userLocation) {
       setCurrentCoordinates(userLocation);
-      toast({
-        title: "Map recentered",
-        description: "Returned to your location",
-      });
+      toast({ title: "Map recentered", description: "Returned to your location" });
     } else {
-      // If no user location yet, get it first
       handleNavigateToUser();
     }
   }, [userLocation, toast]);
 
-  const handleGoToProducts = () => {
-    navigate('/products');
-  };
+  const handleGoToProducts = () => navigate('/products');
 
   const handleRouteToggle = useCallback(() => {
     if (!targetMarker) {
-      toast({
-        title: "No destination set",
-        description: "Double right-click on the map to place a destination marker first",
-        variant: "destructive",
-      });
+      toast({ title: "No destination set", description: "Double right-click on the map to place a destination marker first", variant: "destructive" });
       return;
     }
-
-    const newRoutingState = !isRoutingActive;
-    setIsRoutingActive(newRoutingState);
-    
-    toast({
-      title: newRoutingState ? "Route activated" : "Route deactivated",
-      description: newRoutingState 
-        ? "Showing road route to destination" 
-        : "Route cleared from map",
-    });
+    const newState = !isRoutingActive;
+    setIsRoutingActive(newState);
+    toast({ title: newState ? "Route activated" : "Route deactivated", description: newState ? "Showing road route to destination" : "Route cleared from map" });
   }, [targetMarker, isRoutingActive, toast]);
 
   const handleClearRoute = useCallback(() => {
     setIsRoutingActive(false);
     setTargetMarker(null);
-    toast({
-      title: "Route cleared",
-      description: "Destination marker and route removed",
-    });
+    toast({ title: "Route cleared", description: "Destination marker and route removed" });
   }, [toast]);
 
   const handleLandMarkerAdd = useCallback((coords: Coordinates) => {
     setTargetMarker(coords);
     setIsRoutingActive(false);
-    toast({
-      title: "Marker placed",
-      description: "Click the route button to navigate here",
-    });
+    toast({ title: "Marker placed", description: "Click the route button to navigate here" });
   }, [toast]);
 
-  const handleSaveLocation = useCallback(() => {
-    if (targetMarker) {
-      const name = `Location ${new Date().toLocaleTimeString()}`;
-      addFavorite('location', name, { coordinates: targetMarker });
-    } else {
-      toast({
-        title: "No location selected",
-        description: "Please place a marker first",
-        variant: "destructive",
-      });
-    }
-  }, [targetMarker, addFavorite, toast]);
+  const handleSaveFavorite = useCallback((name: string, coords: Coordinates, type: 'location' | 'business') => {
+    addFavorite(type, name, { coordinates: coords });
+  }, [addFavorite]);
 
   const handleSelectFavoriteLocation = useCallback((coords: Coordinates) => {
     setCurrentCoordinates(coords);
-    toast({
-      title: "Location loaded",
-      description: "Map centered on saved location",
-    });
+    toast({ title: "Location loaded", description: "Map centered on saved location" });
   }, [toast]);
+
+  const handleCoordinatePicked = useCallback((coords: Coordinates) => {
+    setPickedCoords(coords);
+    toast({ title: "Coordinates picked", description: `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}` });
+  }, [toast]);
+
+  const copyPickedCoords = () => {
+    if (pickedCoords) {
+      navigator.clipboard.writeText(`${pickedCoords.lat.toFixed(6)}, ${pickedCoords.lng.toFixed(6)}`);
+      setCopiedCoords(true);
+      toast({ title: "Copied!", description: "Coordinates copied to clipboard" });
+      setTimeout(() => setCopiedCoords(false), 2000);
+    }
+  };
 
   return (
     <div className="relative h-screen">
@@ -156,6 +125,9 @@ const MapPage = () => {
         targetCoordinates={isRoutingActive ? targetMarker : undefined}
         onLandMarkerAdd={handleLandMarkerAdd}
         onBusinessSelect={handleBusinessSelect}
+        onSaveFavorite={handleSaveFavorite}
+        coordinatePickerMode={coordinatePickerMode}
+        onCoordinatePicked={handleCoordinatePicked}
         showHeatmap={false}
         enableLiveTracking={!!userLocation}
       />
@@ -180,60 +152,67 @@ const MapPage = () => {
                 <Sparkles className="h-4 w-4 text-primary" />
                 AI Search
               </h3>
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
-                setShowSearch(false);
-                setFilteredBusinesses([]);
-              }}>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setShowSearch(false); setFilteredBusinesses([]); }}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <ConversationalSearch
-              businesses={allBusinesses}
-              onResultsFound={handleSearchResults}
-              onBusinessSelect={handleBusinessSelect}
-            />
+            <ConversationalSearch businesses={allBusinesses} onResultsFound={handleSearchResults} onBusinessSelect={handleBusinessSelect} />
           </div>
         </div>
       )}
 
-      {/* Favorites, Save, and Search buttons */}
-      <div className="absolute top-4 left-20 z-[1000] flex gap-2">
-        <Button
-          onClick={() => setShowSearch(!showSearch)}
-          variant="secondary"
-          size="sm"
-          className="shadow-lg"
-        >
-          <Sparkles className="h-4 w-4 mr-2" />
-          AI Search
+      {/* Top buttons */}
+      <div className="absolute top-4 left-20 z-[1000] flex gap-2 flex-wrap">
+        <Button onClick={() => setShowSearch(!showSearch)} variant="secondary" size="sm" className="shadow-lg">
+          <Sparkles className="h-4 w-4 mr-2" /> AI Search
+        </Button>
+        <Button onClick={() => setShowFavorites(!showFavorites)} variant="secondary" size="sm" className="shadow-lg">
+          <Star className="h-4 w-4 mr-2" /> Favorites
         </Button>
         <Button
-          onClick={() => setShowFavorites(!showFavorites)}
-          variant="secondary"
+          onClick={() => { setCoordinatePickerMode(!coordinatePickerMode); if (coordinatePickerMode) setPickedCoords(null); }}
+          variant={coordinatePickerMode ? "default" : "secondary"}
           size="sm"
-          className="shadow-lg"
+          className={`shadow-lg ${coordinatePickerMode ? 'cosmic-gradient text-primary-foreground' : ''}`}
         >
-          <Star className="h-4 w-4 mr-2" />
-          Favorites
+          <Crosshair className="h-4 w-4 mr-2" /> Pick Coords
         </Button>
         {targetMarker && (
-          <Button
-            onClick={handleSaveLocation}
-            variant="secondary"
-            size="sm"
-            className="shadow-lg"
-          >
-            <Star className="h-4 w-4 mr-2 fill-primary" />
-            Save Location
+          <Button onClick={() => handleSaveFavorite(`Location ${new Date().toLocaleTimeString()}`, targetMarker, 'location')} variant="secondary" size="sm" className="shadow-lg">
+            <Star className="h-4 w-4 mr-2 fill-primary" /> Save Location
           </Button>
         )}
       </div>
 
+      {/* Picked coordinates panel */}
+      {pickedCoords && coordinatePickerMode && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] bg-card/95 backdrop-blur border border-border rounded-lg shadow-xl p-4 min-w-[300px]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-semibold text-sm text-foreground">Picked Coordinates</span>
+            <Button variant="ghost" size="sm" onClick={copyPickedCoords} className="h-7">
+              {copiedCoords ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            </Button>
+          </div>
+          <p className="font-mono text-sm text-muted-foreground mb-3">{pickedCoords.lat.toFixed(6)}, {pickedCoords.lng.toFixed(6)}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button size="sm" variant="outline" onClick={() => navigate('/tools/distance', { state: { lat: pickedCoords.lat, lng: pickedCoords.lng } })}>
+              Distance Calc
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate('/tools/area', { state: { lat: pickedCoords.lat, lng: pickedCoords.lng } })}>
+              Area Measure
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate('/tools/route-optimizer', { state: { lat: pickedCoords.lat, lng: pickedCoords.lng } })}>
+              Route Optimizer
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => { handleSaveFavorite(`Picked ${pickedCoords.lat.toFixed(4)}, ${pickedCoords.lng.toFixed(4)}`, pickedCoords, 'location'); }}>
+              ★ Save Favorite
+            </Button>
+          </div>
+        </div>
+      )}
+
       {showFavorites && (
-        <FavoritesPanel
-          onSelectLocation={handleSelectFavoriteLocation}
-          onClose={() => setShowFavorites(false)}
-        />
+        <FavoritesPanel onSelectLocation={handleSelectFavoriteLocation} onClose={() => setShowFavorites(false)} />
       )}
     </div>
   );
