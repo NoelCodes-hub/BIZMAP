@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Plus, Trash2, Ruler, RotateCcw } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,8 +35,11 @@ const sphericalArea = (vertices: { lat: number; lng: number }[]) => {
 };
 
 const AreaMeasurement = () => {
+  const location = useLocation();
+  const mapCoords = location.state as { lat?: number; lng?: number } | null;
+  
   const [vertices, setVertices] = useState<Vertex[]>([
-    { id: '1', lat: '', lng: '' },
+    { id: '1', lat: mapCoords?.lat?.toString() ?? '', lng: mapCoords?.lng?.toString() ?? '' },
     { id: '2', lat: '', lng: '' },
     { id: '3', lat: '', lng: '' },
   ]);

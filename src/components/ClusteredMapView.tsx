@@ -19,13 +19,15 @@ interface ClusteredMapViewProps {
   showHeatmap?: boolean;
   showFogOfWar?: boolean;
   enableLiveTracking?: boolean;
+  coordinatePickerMode?: boolean;
   onBusinessSelect?: (business: Business) => void;
   onLandMarkerAdd?: (coordinates: Coordinates) => void;
+  onSaveFavorite?: (name: string, coords: Coordinates, type: 'location' | 'business') => void;
+  onCoordinatePicked?: (coordinates: Coordinates) => void;
 }
 
-// Marker colors that cycle on double-click
 const MARKER_COLORS = [
-  'hsl(280, 70%, 60%)',  // Purple
+  'hsl(217, 91%, 60%)',  // Blue
   'hsl(340, 82%, 52%)',  // Pink
   'hsl(25, 95%, 53%)',   // Orange
   'hsl(142, 71%, 45%)',  // Green
@@ -41,8 +43,11 @@ const ClusteredMapView = ({
   showHeatmap = false,
   showFogOfWar = false,
   enableLiveTracking = false,
+  coordinatePickerMode = false,
   onBusinessSelect,
-  onLandMarkerAdd
+  onLandMarkerAdd,
+  onSaveFavorite,
+  onCoordinatePicked,
 }: ClusteredMapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -51,8 +56,25 @@ const ClusteredMapView = ({
   const routingControlRef = useRef<any>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const landMarkersRef = useRef<L.Marker[]>([]);
+  const pickerMarkerRef = useRef<L.Marker | null>(null);
   const colorIndexRef = useRef(0);
   const [mapReady, setMapReady] = useState(false);
+  const coordinatePickerModeRef = useRef(coordinatePickerMode);
+  const onCoordinatePickedRef = useRef(onCoordinatePicked);
+  const onSaveFavoriteRef = useRef(onSaveFavorite);
+  const onLandMarkerAddRef = useRef(onLandMarkerAdd);
+
+  // Keep refs in sync
+  useEffect(() => { coordinatePickerModeRef.current = coordinatePickerMode; }, [coordinatePickerMode]);
+  useEffect(() => { onCoordinatePickedRef.current = onCoordinatePicked; }, [onCoordinatePicked]);
+  useEffect(() => { onSaveFavoriteRef.current = onSaveFavorite; }, [onSaveFavorite]);
+  useEffect(() => { onLandMarkerAddRef.current = onLandMarkerAdd; }, [onLandMarkerAdd]);
+
+  // Update cursor for picker mode
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    mapContainerRef.current.style.cursor = coordinatePickerMode ? 'crosshair' : '';
+  }, [coordinatePickerMode]);
 
   // Create pulsing user marker icon
   const createUserMarkerIcon = () => {
@@ -95,33 +117,26 @@ const ClusteredMapView = ({
       maxClusterRadius: 60,
       iconCreateFunction: (cluster: any) => {
         const count = cluster.getChildCount();
-        let size = 'small';
         let sizeClass = 40;
-        
-        if (count >= 50) {
-          size = 'large';
-          sizeClass = 60;
-        } else if (count >= 20) {
-          size = 'medium';
-          sizeClass = 50;
-        }
+        if (count >= 50) sizeClass = 56;
+        else if (count >= 20) sizeClass = 48;
 
         return L.divIcon({
-          html: `<div class="cluster-icon ${size}" style="
+          html: `<div style="
             width: ${sizeClass}px;
             height: ${sizeClass}px;
-            background: linear-gradient(135deg, hsl(217, 91%, 60%), hsl(280, 70%, 60%));
+            background: hsl(217, 91%, 60%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-weight: bold;
-            font-size: ${count >= 50 ? '16px' : '14px'};
+            font-weight: 700;
+            font-size: ${count >= 50 ? '15px' : '13px'};
             border: 3px solid white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
           ">${count}</div>`,
-          className: 'marker-cluster',
+          className: 'marker-cluster-custom',
           iconSize: L.point(sizeClass, sizeClass)
         });
       }
@@ -131,7 +146,7 @@ const ClusteredMapView = ({
     setMapReady(true);
 
     // Helper to create marker popup with actions
-    const createMarkerPopup = (marker: L.Marker, markerIndex: number, currentColor: string, currentLabel: string) => {
+    const createMarkerPopup = (marker: L.Marker, markerIndex: number, currentColor: string, currentLabel: string, lat: number, lng: number) => {
       const colorButtons = MARKER_COLORS.map((c, i) => 
         `<button class="land-marker-color-btn" data-color="${c}" data-index="${i}" style="
           width: 20px; height: 20px;
@@ -157,17 +172,11 @@ const ClusteredMapView = ({
           <div style="margin: 8px 0; display: flex; flex-wrap: wrap; gap: 2px;">
             ${colorButtons}
           </div>
-          <button class="land-marker-delete-btn" style="
-            width: 100%;
-            padding: 6px 12px;
-            background: hsl(0, 72%, 51%);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-          ">Delete Marker</button>
+          <div style="font-size:11px;color:#888;margin-bottom:8px;">${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
+          <div style="display:flex;gap:4px;">
+            <button class="land-marker-fav-btn" style="flex:1;padding:6px;background:hsl(217,91%,60%);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;">★ Save Favorite</button>
+            <button class="land-marker-delete-btn" style="flex:1;padding:6px;background:hsl(0,72%,51%);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;">Delete</button>
+          </div>
         </div>
       `;
     };
@@ -176,42 +185,16 @@ const ClusteredMapView = ({
     const updateMarkerIcon = (marker: L.Marker, color: string, label: string) => {
       const hasLabel = label.trim().length > 0;
       marker.setIcon(L.divIcon({
-        html: `<div style="
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        ">
-          <div style="
-            width: 24px; height: 24px;
-            background: ${color};
-            border: 3px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            transition: transform 0.2s;
-          "></div>
-          ${hasLabel ? `<div style="
-            position: absolute;
-            top: 28px;
-            background: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            color: ${color};
-            white-space: nowrap;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            max-width: 100px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          ">${label}</div>` : ''}
+        html: `<div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+          <div style="width:24px;height:24px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>
+          ${hasLabel ? `<div style="position:absolute;top:28px;background:white;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;color:${color};white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.2);max-width:100px;overflow:hidden;text-overflow:ellipsis;">${label}</div>` : ''}
         </div>`,
         iconSize: [24, hasLabel ? 50 : 24],
         iconAnchor: [12, 12]
       }));
     };
 
-    // Double right-click for land markers with color cycling
+    // Double right-click for land markers
     let rightClickCount = 0;
     let rightClickTimer: NodeJS.Timeout;
 
@@ -222,7 +205,7 @@ const ClusteredMapView = ({
       } else if (rightClickCount === 2) {
         clearTimeout(rightClickTimer);
         rightClickCount = 0;
-        onLandMarkerAdd?.({ lat: e.latlng.lat, lng: e.latlng.lng });
+        onLandMarkerAddRef.current?.({ lat: e.latlng.lat, lng: e.latlng.lng });
         
         // Get next color in cycle
         const color = MARKER_COLORS[colorIndexRef.current % MARKER_COLORS.length];
@@ -231,14 +214,7 @@ const ClusteredMapView = ({
         
         const marker = L.marker([e.latlng.lat, e.latlng.lng], {
           icon: L.divIcon({
-            html: `<div style="
-              width: 24px; height: 24px;
-              background: ${color};
-              border: 3px solid white;
-              border-radius: 50%;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-              transition: transform 0.2s;
-            "></div>`,
+            html: `<div style="width:24px;height:24px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>`,
             iconSize: [24, 24],
             iconAnchor: [12, 12]
           })
@@ -248,43 +224,48 @@ const ClusteredMapView = ({
         (marker as any)._currentColor = color;
         (marker as any)._currentLabel = '';
         
-        marker.bindPopup(createMarkerPopup(marker, markerIndex, color, ''));
+        marker.bindPopup(createMarkerPopup(marker, markerIndex, color, '', e.latlng.lat, e.latlng.lng));
         
         // Handle popup open to attach event listeners
         marker.on('popupopen', () => {
-          const popup = marker.getPopup();
-          if (!popup) return;
-          
-          const container = popup.getElement();
+          const container = marker.getPopup()?.getElement();
           if (!container) return;
 
           // Label input
           const labelInput = container.querySelector('.land-marker-label-input') as HTMLInputElement;
-          labelInput?.addEventListener('change', (e) => {
-            const newLabel = (e.target as HTMLInputElement).value;
+          const handleLabelChange = (evt: Event) => {
+            const newLabel = (evt.target as HTMLInputElement).value;
             (marker as any)._currentLabel = newLabel;
             updateMarkerIcon(marker, (marker as any)._currentColor, newLabel);
-          });
-          labelInput?.addEventListener('keypress', (e) => {
-            if ((e as KeyboardEvent).key === 'Enter') {
-              const newLabel = (e.target as HTMLInputElement).value;
-              (marker as any)._currentLabel = newLabel;
-              updateMarkerIcon(marker, (marker as any)._currentColor, newLabel);
+          };
+          labelInput?.addEventListener('change', handleLabelChange);
+          labelInput?.addEventListener('keypress', (evt) => {
+            if ((evt as KeyboardEvent).key === 'Enter') {
+              handleLabelChange(evt);
               marker.closePopup();
             }
           });
 
           // Color change buttons
           container.querySelectorAll('.land-marker-color-btn').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-              const newColor = (e.target as HTMLElement).dataset.color;
+            btn.addEventListener('click', (evt) => {
+              const newColor = (evt.target as HTMLElement).dataset.color;
               if (newColor) {
                 (marker as any)._currentColor = newColor;
                 const currentLabel = (marker as any)._currentLabel || '';
                 updateMarkerIcon(marker, newColor, currentLabel);
-                marker.setPopupContent(createMarkerPopup(marker, markerIndex, newColor, currentLabel));
+                const latlng = marker.getLatLng();
+                marker.setPopupContent(createMarkerPopup(marker, markerIndex, newColor, currentLabel, latlng.lat, latlng.lng));
               }
             });
+          });
+
+          // Save favorite button
+          container.querySelector('.land-marker-fav-btn')?.addEventListener('click', () => {
+            const latlng = marker.getLatLng();
+            const label = (marker as any)._currentLabel || `Saved Location`;
+            onSaveFavoriteRef.current?.(label, { lat: latlng.lat, lng: latlng.lng }, 'location');
+            marker.closePopup();
           });
 
           // Delete button
@@ -292,14 +273,48 @@ const ClusteredMapView = ({
             marker.closePopup();
             mapRef.current?.removeLayer(marker);
             const idx = landMarkersRef.current.indexOf(marker);
-            if (idx > -1) {
-              landMarkersRef.current.splice(idx, 1);
-            }
+            if (idx > -1) landMarkersRef.current.splice(idx, 1);
           });
         });
         
         landMarkersRef.current.push(marker);
       }
+    });
+
+    // Click handler for coordinate picker mode
+    mapRef.current.on('click', (e: L.LeafletMouseEvent) => {
+      if (!coordinatePickerModeRef.current) return;
+      
+      // Remove previous picker marker
+      if (pickerMarkerRef.current && mapRef.current) {
+        mapRef.current.removeLayer(pickerMarkerRef.current);
+      }
+
+      pickerMarkerRef.current = L.marker([e.latlng.lat, e.latlng.lng], {
+        icon: L.divIcon({
+          html: `<div style="width:28px;height:28px;background:hsl(142,71%,45%);border:3px solid white;border-radius:50%;box-shadow:0 2px 10px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        })
+      }).addTo(mapRef.current!);
+
+      pickerMarkerRef.current.bindPopup(`
+        <div style="text-align:center;min-width:160px;">
+          <p style="font-weight:600;margin:0 0 4px;">Picked Coordinates</p>
+          <p style="font-size:12px;color:#666;margin:0 0 8px;font-family:monospace;">${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}</p>
+          <button class="picker-confirm-btn" style="width:100%;padding:6px;background:hsl(142,71%,45%);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;">Use These Coordinates</button>
+        </div>
+      `).openPopup();
+
+      pickerMarkerRef.current.on('popupopen', () => {
+        const container = pickerMarkerRef.current?.getPopup()?.getElement();
+        container?.querySelector('.picker-confirm-btn')?.addEventListener('click', () => {
+          onCoordinatePickedRef.current?.({ lat: e.latlng.lat, lng: e.latlng.lng });
+          pickerMarkerRef.current?.closePopup();
+        });
+      });
     });
 
     return () => {
@@ -359,30 +374,37 @@ const ClusteredMapView = ({
     displayBusinesses.forEach((business) => {
       const color = getMarkerColor(business.type);
       const isHighlighted = highlightedBusinesses?.some(b => b.id === business.id);
+      const size = isHighlighted ? 32 : 24;
       
       const marker = L.marker([business.latitude, business.longitude], {
         icon: L.divIcon({
-          html: `<div style="
-            width: ${isHighlighted ? '32px' : '24px'}; 
-            height: ${isHighlighted ? '32px' : '24px'};
-            background: ${color};
-            border: 3px solid ${isHighlighted ? 'hsl(280, 70%, 60%)' : 'white'};
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            ${isHighlighted ? 'animation: pulse 2s infinite;' : ''}
-          "></div>`,
-          iconSize: isHighlighted ? [32, 32] : [24, 24],
-          iconAnchor: isHighlighted ? [16, 16] : [12, 12]
+          html: `<div style="width:${size}px;height:${size}px;background:${color};border:3px solid ${isHighlighted ? 'hsl(217,91%,60%)' : 'white'};border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);${isHighlighted ? 'animation:pulse 2s infinite;' : ''}"></div>`,
+          iconSize: [size, size],
+          iconAnchor: [size/2, size/2]
         })
       });
 
       marker.bindPopup(`
-        <div style="min-width: 180px;">
-          <h3 style="margin: 0 0 4px; font-weight: bold;">${business.name}</h3>
-          <p style="margin: 0; color: #666; font-size: 12px;">${business.type.replace('_', ' ')}</p>
-          <p style="margin: 4px 0 0; font-size: 11px;">${business.address || ''}</p>
+        <div style="min-width:200px;">
+          <h3 style="margin:0 0 4px;font-weight:bold;">${business.name}</h3>
+          <p style="margin:0;color:#666;font-size:12px;">${business.type.replace('_', ' ')}</p>
+          <p style="margin:4px 0 8px;font-size:11px;">${business.address || ''}</p>
+          <button class="biz-fav-btn" data-name="${business.name}" data-lat="${business.latitude}" data-lng="${business.longitude}" style="width:100%;padding:6px;background:hsl(217,91%,60%);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;">★ Save to Favorites</button>
         </div>
       `);
+
+      marker.on('popupopen', () => {
+        const container = marker.getPopup()?.getElement();
+        container?.querySelector('.biz-fav-btn')?.addEventListener('click', (e) => {
+          const btn = e.target as HTMLElement;
+          onSaveFavoriteRef.current?.(
+            btn.dataset.name || business.name,
+            { lat: +btn.dataset.lat!, lng: +btn.dataset.lng! },
+            'business'
+          );
+          marker.closePopup();
+        });
+      });
 
       marker.on('click', () => onBusinessSelect?.(business));
       clusterGroupRef.current!.addLayer(marker);
@@ -454,11 +476,20 @@ const ClusteredMapView = ({
       <div ref={mapContainerRef} className="absolute inset-0 rounded-lg shadow-lg" />
       {showFogOfWar && <FogOfWarOverlay map={mapRef.current} enabled={showFogOfWar} />}
       
+      {coordinatePickerMode && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-card/95 backdrop-blur border border-primary px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-foreground flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-[hsl(142,71%,45%)] animate-pulse" />
+          Click on the map to pick coordinates
+        </div>
+      )}
+      
       <style>{`
         @keyframes pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
         }
+        
+        .marker-cluster-custom { background: transparent !important; }
         
         .user-location-container {
           position: relative;
