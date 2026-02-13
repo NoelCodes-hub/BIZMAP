@@ -32,38 +32,58 @@ const Tools = () => {
   ];
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4">Geospatial Tools</h1>
-          <p className="text-muted-foreground text-lg">
-            Professional tools for spatial analysis and calculations
-          </p>
-        </div>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-primary/8 blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-accent/8 blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-secondary/5 blur-3xl" />
+        {/* Grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: 'linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }} />
+      </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {tools.map((tool, index) => (
-            <Link key={index} to={tool.path}>
-              <Card className="glass-morphism hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer group h-full">
-                <CardHeader>
-                  <div className="flex items-start gap-4">
-                    <div className="p-4 rounded-lg cosmic-gradient text-primary-foreground">
-                      {tool.icon}
+      <div className="p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-10 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+              <Compass className="h-4 w-4" /> Professional Suite
+            </div>
+            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent">
+              Geospatial Tools
+            </h1>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Professional tools for spatial analysis, distance calculations, and route optimization
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {tools.map((tool, index) => (
+              <Link key={index} to={tool.path}>
+                <Card className="glass-morphism hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer group h-full border-border/50 hover:border-primary/30">
+                  <CardHeader>
+                    <div className="flex items-start gap-4">
+                      <div className="p-4 rounded-xl cosmic-gradient text-primary-foreground shadow-lg group-hover:shadow-primary/25 transition-shadow">
+                        {tool.icon}
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-2xl mb-2 group-hover:text-primary transition-colors">{tool.title}</CardTitle>
+                        <CardDescription className="text-base">{tool.description}</CardDescription>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-2xl mb-2">{tool.title}</CardTitle>
-                      <CardDescription className="text-base">{tool.description}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Button className="w-full cosmic-gradient text-primary-foreground group-hover:shadow-lg transition-all">
-                    Launch Tool <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                  </CardHeader>
+                  <CardContent>
+                    <Button className="w-full cosmic-gradient text-primary-foreground group-hover:shadow-lg transition-all">
+                      Launch Tool <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>
