@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -10,8 +10,9 @@ import { Coordinates, Business } from '@/types/business';
 import { getCityCoordinates } from '@/utils/cityUtils';
 import { createSampleData } from '@/utils/businessUtils';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Star, Sparkles, X, Crosshair, Copy, Check } from 'lucide-react';
+import { Star, Sparkles, X, Crosshair, Copy, Check, Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const MapPage = () => {
   const [currentCoordinates, setCurrentCoordinates] = useState<Coordinates>(
@@ -26,6 +27,9 @@ const MapPage = () => {
   const [coordinatePickerMode, setCoordinatePickerMode] = useState(false);
   const [pickedCoords, setPickedCoords] = useState<Coordinates | null>(null);
   const [copiedCoords, setCopiedCoords] = useState(false);
+  const [addressQuery, setAddressQuery] = useState('');
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [showAddressSearch, setShowAddressSearch] = useState(false);
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -117,6 +121,29 @@ const MapPage = () => {
     }
   };
 
+  const handleAddressSearch = async () => {
+    if (!addressQuery.trim()) return;
+    setIsSearchingAddress(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressQuery)}&limit=1`
+      );
+      const data = await response.json();
+      if (data.length > 0) {
+        const { lat, lon, display_name } = data[0];
+        const coords = { lat: parseFloat(lat), lng: parseFloat(lon) };
+        setCurrentCoordinates(coords);
+        toast({ title: "Location found", description: display_name.substring(0, 80) });
+      } else {
+        toast({ title: "Not found", description: "No results for that address", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Search error", description: "Could not search for that address", variant: "destructive" });
+    } finally {
+      setIsSearchingAddress(false);
+    }
+  };
+
   return (
     <div className="relative h-screen">
       <ClusteredMapView
@@ -161,8 +188,32 @@ const MapPage = () => {
         </div>
       )}
 
+      {/* Address Search Bar */}
+      {showAddressSearch && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1001] w-full max-w-md px-4">
+          <div className="bg-card/95 backdrop-blur border border-border rounded-lg shadow-xl p-3 flex gap-2">
+            <Input
+              value={addressQuery}
+              onChange={(e) => setAddressQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddressSearch()}
+              placeholder="Search address or place..."
+              className="flex-1"
+            />
+            <Button size="icon" onClick={handleAddressSearch} disabled={isSearchingAddress}>
+              {isSearchingAddress ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            </Button>
+            <Button size="icon" variant="ghost" onClick={() => setShowAddressSearch(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Top buttons */}
       <div className="absolute top-4 left-20 z-[1000] flex gap-2 flex-wrap">
+        <Button onClick={() => setShowAddressSearch(!showAddressSearch)} variant="secondary" size="sm" className="shadow-lg">
+          <Search className="h-4 w-4 mr-2" /> Search
+        </Button>
         <Button onClick={() => setShowSearch(!showSearch)} variant="secondary" size="sm" className="shadow-lg">
           <Sparkles className="h-4 w-4 mr-2" /> AI Search
         </Button>
