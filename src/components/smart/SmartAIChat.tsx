@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, Sparkles, Loader2, MapPin, Navigation, Clock, Users } from 'lucide-react';
+import { Send, Bot, Sparkles, Loader2, MapPin, Navigation, Clock, Users, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +23,15 @@ interface SmartAIChatProps {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bizmap-ai`;
 
+const LANGUAGES = [
+  { value: 'English', label: 'English' },
+  { value: 'Ndebele', label: 'Ndebele' },
+  { value: 'Shona', label: 'Shona' },
+  { value: 'French', label: 'Français' },
+  { value: 'Portuguese', label: 'Português' },
+  { value: 'Spanish', label: 'Español' },
+];
+
 const quickActions = [
   { icon: MapPin, label: "Find nearby", prompt: "Find businesses near me" },
   { icon: Navigation, label: "Plan route", prompt: "Help me plan an efficient route for multiple stops" },
@@ -33,11 +43,12 @@ const SmartAIChat = ({ context }: SmartAIChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "👋 Hi! I'm BizMap your Business and Products assistant. I can help you discover businesses, products, plan efficient routes, and find the best times to visit. What would you like to explore today?"
+      content: "Hi! I'm BizMap your Business and Products assistant. I can help you discover businesses, products, plan efficient routes, and find the best times to visit. What would you like to explore today?"
     }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [language, setLanguage] = useState('English');
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -53,7 +64,6 @@ const SmartAIChat = ({ context }: SmartAIChatProps) => {
     setIsLoading(true);
 
     try {
-      // Get the user's session token for authenticated requests
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
       
@@ -71,25 +81,18 @@ const SmartAIChat = ({ context }: SmartAIChatProps) => {
         },
         body: JSON.stringify({ 
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-          context 
+          context,
+          language,
         }),
       });
 
       if (!resp.ok) {
         if (resp.status === 429) {
-          toast({
-            title: "Rate Limited",
-            description: "Too many requests. Please wait a moment.",
-            variant: "destructive"
-          });
+          toast({ title: "Rate Limited", description: "Too many requests. Please wait a moment.", variant: "destructive" });
           return;
         }
         if (resp.status === 402) {
-          toast({
-            title: "Credits Exhausted",
-            description: "Please add AI credits to continue.",
-            variant: "destructive"
-          });
+          toast({ title: "Credits Exhausted", description: "Please add AI credits to continue.", variant: "destructive" });
           return;
         }
         throw new Error("Failed to connect to AI");
@@ -173,9 +176,24 @@ const SmartAIChat = ({ context }: SmartAIChatProps) => {
           <div className="w-10 h-10 rounded-full cosmic-gradient flex items-center justify-center">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="font-semibold text-foreground">BizMap AI</h3>
             <p className="text-xs text-muted-foreground">Intelligent Business Discovery</p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger className="w-[120px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGES.map(lang => (
+                  <SelectItem key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

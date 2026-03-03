@@ -42,7 +42,7 @@ const Home = () => {
             </Link>
             <Link to="/chat">
               <Button size="lg" variant="outline" className="text-lg px-8 backdrop-blur-sm">
-                Talk to AI Assistant
+                Talk to BizMap
               </Button>
             </Link>
           </div>
