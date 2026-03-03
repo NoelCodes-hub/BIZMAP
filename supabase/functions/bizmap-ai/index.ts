@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Verify user authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "No authorization header" }), {
@@ -27,31 +26,33 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     
-    if (claimsError || !claimsData?.claims) {
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub;
-    console.log(`Authenticated user: ${userId}`);
+    console.log(`Authenticated user: ${user.id}`);
 
-    const { messages, context } = await req.json();
+    const { messages, context, language } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    const langInstruction = language && language !== 'English'
+      ? `\n\nIMPORTANT: The user has selected "${language}" as their preferred language. You MUST respond entirely in ${language}. Translate all your responses into ${language}.`
+      : '';
+
     const systemPrompt = `You are BizMap AI, an intelligent assistant for a geospatial business discovery and navigation platform. You help users:
 
 1. **Find Businesses**: Help users discover businesses by type, location, ratings, or specific needs. You know about restaurants, banks, telecom, retail, healthcare, tourism, and more.
 
-2. **Plan Routes**: Suggest optimal routes for multiple stops, considering time of day, business hours, and efficiency. You can recommend "most productive routes" for salespeople or "sustainability routes" that minimize left turns.
+2. **Plan Routes**: Suggest optimal routes for multiple stops, considering time of day, business hours, and efficiency.
 
 3. **Provide Local Insights**: Share information about business districts, foot traffic patterns, best times to visit, and local recommendations.
 
@@ -62,7 +63,7 @@ serve(async (req) => {
 Current Context:
 ${context ? JSON.stringify(context) : 'No specific context provided'}
 
-Be helpful, concise, and location-aware. Use emojis sparingly to add personality. When suggesting businesses, mention practical details like distance, wait times, or capacity when relevant.`;
+Be helpful, concise, and location-aware. Use emojis sparingly to add personality. When suggesting businesses, mention practical details like distance, wait times, or capacity when relevant.${langInstruction}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
