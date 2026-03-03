@@ -46,8 +46,8 @@ const SmartFeaturesHub = () => {
         ))}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      {/* Content - key forces instant unmount/remount on tab change */}
+      <div className="flex-1 overflow-hidden" key={activeTab}>
         {activeTab === 'ai' && <SmartAIChat />}
         {activeTab === 'playlists' && <PlacePlaylistPanel />}
         {activeTab !== 'ai' && activeTab !== 'playlists' && (
