@@ -33,7 +33,7 @@ const SmartAIChat = ({ context }: SmartAIChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "👋 Hi! I'm your BizMap AI assistant. I can help you discover businesses, plan efficient routes, and find the best times to visit. What would you like to explore today?"
+      content: "👋 Hi! I'm BizMap your Business and Products assistant. I can help you discover businesses, products, plan efficient routes, and find the best times to visit. What would you like to explore today?"
     }
   ]);
   const [input, setInput] = useState('');
