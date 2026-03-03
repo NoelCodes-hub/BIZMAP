@@ -17,6 +17,7 @@ import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import bizMapLogo from '@/assets/bizmap-logo.png';
 import { useAuth } from '@/contexts/AuthContext';
+import ThemeToggle from './ThemeToggle';
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -89,8 +90,11 @@ const Dashboard = () => {
             })}
           </nav>
 
-          {/* User section */}
+          {/* Theme toggle & User section */}
           <div className="p-3 border-t border-sidebar-border">
+            <div className={cn("flex items-center mb-2", isSidebarOpen ? "justify-end" : "justify-center")}>
+              <ThemeToggle />
+            </div>
             {isSidebarOpen ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 px-2">
