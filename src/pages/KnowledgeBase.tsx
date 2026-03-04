@@ -85,14 +85,90 @@ const articles = [
   },
 ];
 
+const highlights = [
+  {
+    icon: Building2,
+    title: '50+ Businesses',
+    subtitle: 'Mapped & Verified',
+    color: 'text-primary',
+    details: [
+      { heading: 'Verified Listings', body: 'Every business on BizMap has been verified for location accuracy, contact details, and operating hours. Our verification process ensures you always find what you\'re looking for.' },
+      { heading: 'Diverse Categories', body: 'From restaurants and retail stores to healthcare providers and tech companies—BizMap covers over 15 business categories across multiple cities.' },
+      { heading: 'Real-Time Updates', body: 'Business information is continuously updated. If a business changes its hours, moves locations, or adds new services, BizMap reflects those changes promptly.' },
+      { heading: 'Community Contributions', body: 'Users can suggest edits and new listings, helping keep the platform accurate and comprehensive for everyone.' },
+    ],
+  },
+  {
+    icon: Wrench,
+    title: 'Pro Tools',
+    subtitle: 'Distance & Routing',
+    color: 'text-accent',
+    details: [
+      { heading: 'Distance Calculator', body: 'Measure straight-line or road distance between any two points. Great for estimating travel time or comparing how far different businesses are from your location.' },
+      { heading: 'Route Optimizer', body: 'Plan multi-stop trips with automatic route optimization. The algorithm finds the shortest path through all your destinations, saving time and fuel.' },
+      { heading: 'Area Measurement', body: 'Draw polygons on the map to calculate enclosed areas. Useful for delivery zone planning, property assessments, or understanding service coverage.' },
+      { heading: 'Batch Geocoding', body: 'Convert lists of addresses into map coordinates instantly. Upload a CSV or enter addresses manually to plot multiple locations at once.' },
+    ],
+  },
+  {
+    icon: Bot,
+    title: 'AI Powered',
+    subtitle: 'Smart Search',
+    color: 'text-primary',
+    details: [
+      { heading: 'Natural Language Queries', body: 'Ask BizMap questions like "Where can I find affordable printing?" or "Best lunch spots open now." The AI understands context and returns relevant, ranked results.' },
+      { heading: 'Multi-Language Support', body: 'Get AI responses in English, Shona, Ndebele, French, Portuguese, and Spanish. Switch languages anytime from the chat settings.' },
+      { heading: 'Smart Recommendations', body: 'Based on your search history and favorites, BizMap suggests businesses and products you might enjoy. The more you use it, the smarter it gets.' },
+      { heading: 'Business Insights', body: 'Ask for peak hours, popular products, or comparisons between similar businesses. The AI synthesizes data to give you actionable information instantly.' },
+    ],
+  },
+];
+
 const KnowledgeBase = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<typeof articles[0] | null>(null);
+  const [selectedHighlight, setSelectedHighlight] = useState<typeof highlights[0] | null>(null);
 
   const filteredArticles = articles.filter(article =>
     article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     article.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Detail view for highlights
+  if (selectedHighlight) {
+    const HighlightIcon = selectedHighlight.icon;
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="relative h-40 sm:h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <HighlightIcon className="h-20 w-20 sm:h-28 sm:w-28 text-primary/20" />
+          </div>
+          <div className="absolute top-4 left-4">
+            <Button variant="outline" size="sm" onClick={() => setSelectedHighlight(null)} className="gap-1 bg-background/80 backdrop-blur-sm">
+              <ChevronLeft className="h-4 w-4" /> Back
+            </Button>
+          </div>
+          <div className="absolute bottom-4 left-4 right-4">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">{selectedHighlight.title}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{selectedHighlight.subtitle}</p>
+          </div>
+        </div>
+        <div className="max-w-3xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
+          {selectedHighlight.details.map((section, i) => (
+            <div key={i} className="flex gap-3 sm:gap-4">
+              <div className="mt-1 shrink-0">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-base sm:text-lg text-foreground">{section.heading}</h3>
+                <p className="text-sm sm:text-base text-muted-foreground mt-1 leading-relaxed">{section.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (selectedArticle) {
     return (
