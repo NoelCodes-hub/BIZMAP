@@ -233,27 +233,22 @@ const KnowledgeBase = () => {
 
           {/* Feature highlights */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div className="flex items-center gap-3 p-3 sm:p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-              <Building2 className="h-7 w-7 sm:h-8 sm:w-8 text-primary shrink-0" />
-              <div>
-                <p className="font-semibold text-sm">50+ Businesses</p>
-                <p className="text-xs text-muted-foreground">Mapped & Verified</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 sm:p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-              <Wrench className="h-7 w-7 sm:h-8 sm:w-8 text-accent shrink-0" />
-              <div>
-                <p className="font-semibold text-sm">Pro Tools</p>
-                <p className="text-xs text-muted-foreground">Distance & Routing</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 sm:p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-              <Bot className="h-7 w-7 sm:h-8 sm:w-8 text-primary shrink-0" />
-              <div>
-                <p className="font-semibold text-sm">AI Powered</p>
-                <p className="text-xs text-muted-foreground">Smart Search</p>
-              </div>
-            </div>
+            {highlights.map((hl, i) => {
+              const Icon = hl.icon;
+              return (
+                <div
+                  key={i}
+                  onClick={() => setSelectedHighlight(hl)}
+                  className="flex items-center gap-3 p-3 sm:p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all"
+                >
+                  <Icon className={`h-7 w-7 sm:h-8 sm:w-8 ${hl.color} shrink-0`} />
+                  <div>
+                    <p className="font-semibold text-sm">{hl.title}</p>
+                    <p className="text-xs text-muted-foreground">{hl.subtitle}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Search */}
