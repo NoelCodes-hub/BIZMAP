@@ -146,6 +146,12 @@ const MapPage = () => {
 
   return (
     <div className="relative h-screen">
+      {/* City Title Bar */}
+      <div className="absolute top-0 left-0 right-0 z-[1001] bg-card/90 backdrop-blur-md border-b border-border px-4 py-2 flex items-center gap-2">
+        <MapPin className="h-4 w-4 text-primary" />
+        <span className="font-semibold text-sm text-foreground">Bulawayo, Zimbabwe</span>
+      </div>
+
       <ClusteredMapView
         coordinates={currentCoordinates}
         businesses={displayedBusinesses}
@@ -210,7 +216,7 @@ const MapPage = () => {
       )}
 
       {/* Top buttons */}
-      <div className="absolute top-4 left-20 z-[1000] flex gap-2 flex-wrap">
+      <div className="absolute top-12 left-20 z-[1000] flex gap-2 flex-wrap">
         <Button onClick={() => setShowAddressSearch(!showAddressSearch)} variant="secondary" size="sm" className="shadow-lg">
           <Search className="h-4 w-4 mr-2" /> Search
         </Button>
