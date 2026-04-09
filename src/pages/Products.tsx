@@ -107,8 +107,9 @@ const Products = () => {
                 <CurrencySelector />
                 <CartDrawer />
               </div>
+            </div>
 
-          {/* Search & Filters */}
+           {/* Search & Filters */}
           <div className="bg-card/60 backdrop-blur-md rounded-xl p-4 mb-6 border border-border/50 shadow-xl">
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="relative flex-1">
