@@ -10,7 +10,7 @@ import { Coordinates, Business } from '@/types/business';
 import { getCityCoordinates } from '@/utils/cityUtils';
 import { createSampleData } from '@/utils/businessUtils';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Star, Sparkles, X, Crosshair, Copy, Check, Search, Loader2 } from 'lucide-react';
+import { Star, Sparkles, X, Crosshair, Copy, Check, Search, Loader2, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
