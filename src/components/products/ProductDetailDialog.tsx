@@ -1,4 +1,4 @@
-import { MapPin, Star, Percent, Sparkles, ShoppingCart, Check, X } from 'lucide-react';
+import { MapPin, Star, Percent, Sparkles, ShoppingCart, Check } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Separator } from '@/components/ui/separator';
 import { Product } from '@/data/products';
 import { useCartContext } from '@/contexts/CartContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ProductDetailDialogProps {
   product: Product | null;
@@ -15,6 +16,7 @@ interface ProductDetailDialogProps {
 
 const ProductDetailDialog = ({ product, open, onOpenChange }: ProductDetailDialogProps) => {
   const { addItem, items } = useCartContext();
+  const { format } = useCurrency();
   const [justAdded, setJustAdded] = useState(false);
 
   if (!product) return null;
@@ -40,13 +42,8 @@ const ProductDetailDialog = ({ product, open, onOpenChange }: ProductDetailDialo
         </DialogHeader>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Image */}
           <div className="relative rounded-xl overflow-hidden">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-64 md:h-full object-cover"
-            />
+            <img src={product.image} alt={product.name} className="w-full h-64 md:h-full object-cover" />
             <div className="absolute top-3 left-3 flex flex-col gap-1.5">
               {product.isNew && (
                 <Badge className="bg-accent text-accent-foreground text-xs font-semibold">
@@ -61,33 +58,21 @@ const ProductDetailDialog = ({ product, open, onOpenChange }: ProductDetailDialo
             </div>
           </div>
 
-          {/* Details */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-1.5">
-              <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
-                {product.category}
-              </Badge>
-              <Badge variant="outline" className="bg-secondary/10 border-secondary/30">
-                {product.subcategory}
-              </Badge>
-              <Badge
-                variant={product.inStock ? "default" : "secondary"}
-                className={product.inStock ? "bg-green-500/90 text-white" : ""}
-              >
+              <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">{product.category}</Badge>
+              <Badge variant="outline" className="bg-secondary/10 border-secondary/30">{product.subcategory}</Badge>
+              <Badge variant={product.inStock ? "default" : "secondary"} className={product.inStock ? "bg-green-500/90 text-white" : ""}>
                 {product.inStock ? "In Stock" : "Out of Stock"}
               </Badge>
             </div>
 
             <h2 className="text-2xl font-bold">{product.name}</h2>
 
-            {/* Rating */}
             <div className="flex items-center gap-2">
               <div className="flex gap-0.5">
                 {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-5 h-5 ${i < Math.round(product.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`}
-                  />
+                  <Star key={i} className={`w-5 h-5 ${i < Math.round(product.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} />
                 ))}
               </div>
               <span className="font-medium">{product.rating}</span>
@@ -96,25 +81,22 @@ const ProductDetailDialog = ({ product, open, onOpenChange }: ProductDetailDialo
 
             <Separator />
 
-            {/* Price */}
             <div className="flex items-baseline gap-3">
               {discountedPrice ? (
                 <>
-                  <span className="text-3xl font-bold text-primary">${discountedPrice.toFixed(2)}</span>
-                  <span className="text-lg text-muted-foreground line-through">${product.price.toFixed(2)}</span>
+                  <span className="text-3xl font-bold text-primary">{format(discountedPrice)}</span>
+                  <span className="text-lg text-muted-foreground line-through">{format(product.price)}</span>
                   <Badge className="bg-destructive/10 text-destructive border-destructive/20" variant="outline">
-                    Save ${(product.price - discountedPrice).toFixed(2)}
+                    Save {format(product.price - discountedPrice)}
                   </Badge>
                 </>
               ) : (
-                <span className="text-3xl font-bold text-primary">${product.price.toFixed(2)}</span>
+                <span className="text-3xl font-bold text-primary">{format(product.price)}</span>
               )}
-              <span className="text-sm text-muted-foreground">{product.currency}</span>
             </div>
 
             <Separator />
 
-            {/* Business info */}
             <div className="space-y-2">
               <p className="font-semibold text-base">{product.business}</p>
               <div className="flex items-center text-sm text-muted-foreground">
@@ -125,7 +107,6 @@ const ProductDetailDialog = ({ product, open, onOpenChange }: ProductDetailDialo
 
             <Separator />
 
-            {/* Actions */}
             <div className="flex gap-3 mt-auto pt-2">
               <Button
                 variant={justAdded || isInCart ? "secondary" : "default"}
@@ -134,13 +115,7 @@ const ProductDetailDialog = ({ product, open, onOpenChange }: ProductDetailDialo
                 disabled={justAdded || !product.inStock}
                 size="lg"
               >
-                {justAdded ? (
-                  <><Check className="w-5 h-5 mr-2" /> Added!</>
-                ) : isInCart ? (
-                  <><ShoppingCart className="w-5 h-5 mr-2" /> Add More</>
-                ) : (
-                  <><ShoppingCart className="w-5 h-5 mr-2" /> Add to Cart</>
-                )}
+                {justAdded ? <><Check className="w-5 h-5 mr-2" /> Added!</> : isInCart ? <><ShoppingCart className="w-5 h-5 mr-2" /> Add More</> : <><ShoppingCart className="w-5 h-5 mr-2" /> Add to Cart</>}
               </Button>
             </div>
           </div>

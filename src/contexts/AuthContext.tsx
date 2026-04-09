@@ -2,18 +2,19 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 
-type AppRole = 'admin' | 'user' | 'guest';
+type AppRole = 'admin' | 'business' | 'user' | 'guest';
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   role: AppRole | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, displayName?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, displayName?: string, accountType?: 'user' | 'business') => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInAsGuest: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
+  isBusiness: boolean;
   isGuest: boolean;
 }
 
@@ -64,13 +65,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, displayName?: string) => {
+  const signUp = async (email: string, password: string, displayName?: string, accountType?: 'user' | 'business') => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { display_name: displayName || email },
+        data: { display_name: displayName || email, account_type: accountType || 'user' },
       },
     });
     return { error };
@@ -122,6 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signInAsGuest,
       signOut,
       isAdmin: role === 'admin',
+      isBusiness: role === 'business',
       isGuest: role === 'guest',
     }}>
       {children}

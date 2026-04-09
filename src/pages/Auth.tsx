@@ -6,13 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, MapPin, Shield, User, UserCheck } from 'lucide-react';
+import { Loader2, MapPin, Shield, User, UserCheck, Briefcase } from 'lucide-react';
 import bizMapLogo from '@/assets/bizmap-logo.png';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [accountType, setAccountType] = useState<'user' | 'business'>('user');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signIn, signUp, signInAsGuest } = useAuth();
   const { toast } = useToast();
@@ -34,7 +35,7 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const { error } = await signUp(email, password, displayName);
+    const { error } = await signUp(email, password, displayName, accountType);
     if (error) {
       toast({ title: 'Sign up failed', description: error.message, variant: 'destructive' });
     } else {
@@ -57,7 +58,6 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
@@ -85,21 +85,8 @@ const Auth = () => {
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
+                  <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />}
@@ -111,31 +98,47 @@ const Auth = () => {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Input
-                    type="text"
-                    placeholder="Display Name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                  />
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Password (min 6 characters)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
+                  <Input type="text" placeholder="Display Name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+                  <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <Input type="password" placeholder="Password (min 6 characters)" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
                 </div>
+
+                {/* Account Type Selection */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Account Type</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAccountType('user')}
+                      className={`p-3 rounded-lg border-2 transition-all text-center ${
+                        accountType === 'user'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <User className="h-5 w-5 mx-auto mb-1 text-primary" />
+                      <p className="text-xs font-medium">Personal</p>
+                      <p className="text-[9px] text-muted-foreground">Browse & shop</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAccountType('business')}
+                      className={`p-3 rounded-lg border-2 transition-all text-center ${
+                        accountType === 'business'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <Briefcase className="h-5 w-5 mx-auto mb-1 text-accent" />
+                      <p className="text-xs font-medium">Business</p>
+                      <p className="text-[9px] text-muted-foreground">List & manage</p>
+                    </button>
+                  </div>
+                </div>
+
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <User className="h-4 w-4 mr-2" />}
-                  Create Account
+                  Create {accountType === 'business' ? 'Business' : 'Personal'} Account
                 </Button>
               </form>
             </TabsContent>
@@ -148,31 +151,31 @@ const Auth = () => {
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleGuestAccess}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" className="w-full" onClick={handleGuestAccess} disabled={isSubmitting}>
             <MapPin className="h-4 w-4 mr-2" />
             Continue as Guest
           </Button>
 
-          <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-            <div className="p-3 rounded-lg bg-muted/50">
-              <Shield className="h-5 w-5 mx-auto mb-1 text-destructive" />
+          <div className="mt-6 grid grid-cols-4 gap-2 text-center">
+            <div className="p-2 rounded-lg bg-muted/50">
+              <Shield className="h-4 w-4 mx-auto mb-1 text-destructive" />
               <p className="text-[10px] font-medium text-muted-foreground">Admin</p>
-              <p className="text-[9px] text-muted-foreground/70">Full access</p>
+              <p className="text-[8px] text-muted-foreground/70">Full control</p>
             </div>
-            <div className="p-3 rounded-lg bg-muted/50">
-              <User className="h-5 w-5 mx-auto mb-1 text-primary" />
+            <div className="p-2 rounded-lg bg-muted/50">
+              <Briefcase className="h-4 w-4 mx-auto mb-1 text-accent" />
+              <p className="text-[10px] font-medium text-muted-foreground">Business</p>
+              <p className="text-[8px] text-muted-foreground/70">List & manage</p>
+            </div>
+            <div className="p-2 rounded-lg bg-muted/50">
+              <User className="h-4 w-4 mx-auto mb-1 text-primary" />
               <p className="text-[10px] font-medium text-muted-foreground">User</p>
-              <p className="text-[9px] text-muted-foreground/70">All features</p>
+              <p className="text-[8px] text-muted-foreground/70">All features</p>
             </div>
-            <div className="p-3 rounded-lg bg-muted/50">
-              <MapPin className="h-5 w-5 mx-auto mb-1 text-earth-green" />
+            <div className="p-2 rounded-lg bg-muted/50">
+              <MapPin className="h-4 w-4 mx-auto mb-1 text-earth-green" />
               <p className="text-[10px] font-medium text-muted-foreground">Guest</p>
-              <p className="text-[9px] text-muted-foreground/70">View only</p>
+              <p className="text-[8px] text-muted-foreground/70">View only</p>
             </div>
           </div>
         </CardContent>

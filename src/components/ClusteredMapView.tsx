@@ -196,7 +196,7 @@ const ClusteredMapView = ({
 
     // Double right-click for land markers
     let rightClickCount = 0;
-    let rightClickTimer: NodeJS.Timeout;
+    let rightClickTimer: ReturnType<typeof setTimeout>;
 
     mapRef.current.on('contextmenu', (e: L.LeafletMouseEvent) => {
       rightClickCount++;

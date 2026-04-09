@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import ProductCard from '@/components/products/ProductCard';
 import CartDrawer from '@/components/products/CartDrawer';
+import CurrencySelector from '@/components/CurrencySelector';
 import { products, categories, subcategories } from '@/data/products';
 
 const ITEMS_PER_PAGE = 24;
@@ -101,11 +102,14 @@ const Products = () => {
                    Discover {products.length.toLocaleString()}+ products across Bulawayo
                  </p>
                </div>
-             </div>
-             <CartDrawer />
-           </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <CurrencySelector />
+                <CartDrawer />
+              </div>
+            </div>
 
-          {/* Search & Filters */}
+           {/* Search & Filters */}
           <div className="bg-card/60 backdrop-blur-md rounded-xl p-4 mb-6 border border-border/50 shadow-xl">
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="relative flex-1">
