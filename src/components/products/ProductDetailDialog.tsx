@@ -1,4 +1,4 @@
-import { MapPin, Star, Percent, Sparkles, ShoppingCart, Check } from 'lucide-react';
+import { MapPin, Star, Sparkles, ShoppingCart, Check } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,9 +21,6 @@ const ProductDetailDialog = ({ product, open, onOpenChange }: ProductDetailDialo
 
   if (!product) return null;
 
-  const discountedPrice = product.discount
-    ? product.price * (1 - product.discount / 100)
-    : null;
 
   const isInCart = items.some(item => item.product.id === product.id);
 
@@ -48,11 +45,6 @@ const ProductDetailDialog = ({ product, open, onOpenChange }: ProductDetailDialo
               {product.isNew && (
                 <Badge className="bg-accent text-accent-foreground text-xs font-semibold">
                   <Sparkles className="w-3 h-3 mr-1" /> NEW
-                </Badge>
-              )}
-              {product.discount && (
-                <Badge className="bg-destructive text-destructive-foreground text-xs font-semibold">
-                  <Percent className="w-3 h-3 mr-1" /> {product.discount}% OFF
                 </Badge>
               )}
             </div>
@@ -82,17 +74,7 @@ const ProductDetailDialog = ({ product, open, onOpenChange }: ProductDetailDialo
             <Separator />
 
             <div className="flex items-baseline gap-3">
-              {discountedPrice ? (
-                <>
-                  <span className="text-3xl font-bold text-primary">{format(discountedPrice)}</span>
-                  <span className="text-lg text-muted-foreground line-through">{format(product.price)}</span>
-                  <Badge className="bg-destructive/10 text-destructive border-destructive/20" variant="outline">
-                    Save {format(product.price - discountedPrice)}
-                  </Badge>
-                </>
-              ) : (
-                <span className="text-3xl font-bold text-primary">{format(product.price)}</span>
-              )}
+              <span className="text-3xl font-bold text-primary">{format(product.price)}</span>
             </div>
 
             <Separator />
