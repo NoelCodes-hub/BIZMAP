@@ -9,9 +9,10 @@ const Chat = () => {
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
-      {/* Animated background */}
+      {/* Background image */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-tl from-accent/10 via-background to-primary/10" />
+        <img src="https://images.unsplash.com/photo-1531746790095-e6d591840e15?w=1920&h=1080&fit=crop" alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-background/92 backdrop-blur-sm" />
         <div className="absolute top-10 right-10 w-72 h-72 rounded-full bg-accent/10 blur-3xl animate-pulse" />
         <div className="absolute bottom-10 left-10 w-96 h-96 rounded-full bg-primary/8 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
         <div className="absolute inset-0 opacity-[0.02]" style={{

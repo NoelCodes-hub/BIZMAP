@@ -73,7 +73,7 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-[hsl(220,14%,94%)] dark:bg-background">
       {/* Background Image */}
       <div className="fixed inset-0 z-0">
         <img 
@@ -81,7 +81,7 @@ const Products = () => {
           alt=""
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/95 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-[hsl(220,14%,94%)]/90 dark:bg-background/90 backdrop-blur-sm" />
       </div>
 
       <div className="relative z-10 p-4 md:p-8">
