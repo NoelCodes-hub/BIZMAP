@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, ArrowLeft, SlidersHorizontal, Grid3X3, LayoutGrid } from 'lucide-react';
+import { Search, Filter, ArrowLeft, SlidersHorizontal, Grid3X3, LayoutGrid, Navigation } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,6 +14,16 @@ import { products, categories, subcategories } from '@/data/products';
 const ITEMS_PER_PAGE = 24;
 
 
+const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+};
+
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -21,7 +31,24 @@ const Products = () => {
   const [sortBy, setSortBy] = useState<string>('featured');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'compact'>('grid');
-  
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  const requestLocation = useCallback(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => setUserLocation({ lat: -20.1486, lng: 28.5806 }) // Default to Bulawayo CBD
+      );
+    } else {
+      setUserLocation({ lat: -20.1486, lng: 28.5806 });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (sortBy === 'nearest' && !userLocation) {
+      requestLocation();
+    }
+  }, [sortBy, userLocation, requestLocation]);
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
@@ -49,11 +76,16 @@ const Products = () => {
       if (sortBy === 'price-high') return b.price - a.price;
       if (sortBy === 'rating') return b.rating - a.rating;
       if (sortBy === 'newest') return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
+      if (sortBy === 'nearest' && userLocation) {
+        const distA = getDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
+        const distB = getDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
+        return distA - distB;
+      }
       return ((b.isFeatured ? 2 : 0) + (b.discount ? 1 : 0)) - ((a.isFeatured ? 2 : 0) + (a.discount ? 1 : 0));
     });
 
     return filtered;
-  }, [searchQuery, selectedCategory, selectedSubcategory, sortBy]);
+  }, [searchQuery, selectedCategory, selectedSubcategory, sortBy, userLocation]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = filteredProducts.slice(
@@ -152,6 +184,7 @@ const Products = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="featured">Featured</SelectItem>
+                    <SelectItem value="nearest">Nearest to Me</SelectItem>
                     <SelectItem value="newest">Newest</SelectItem>
                     <SelectItem value="price-low">Price: Low to High</SelectItem>
                     <SelectItem value="price-high">Price: High to Low</SelectItem>

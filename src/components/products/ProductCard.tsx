@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { MapPin, Star, Percent, Sparkles, ShoppingCart, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { MapPin, Star, Sparkles, ShoppingCart, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,12 +17,9 @@ interface ProductCardProps {
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addItem, items } = useCartContext();
   const { format } = useCurrency();
+  const navigate = useNavigate();
   const [justAdded, setJustAdded] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
-
-  const discountedPrice = product.discount
-    ? product.price * (1 - product.discount / 100)
-    : null;
 
   const isInCart = items.some(item => item.product.id === product.id);
 
@@ -50,11 +47,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
                 <Sparkles className="w-3 h-3 mr-1" /> NEW
               </Badge>
             )}
-            {product.discount && (
-              <Badge className="bg-destructive text-destructive-foreground text-xs font-semibold">
-                <Percent className="w-3 h-3 mr-1" /> {product.discount}% OFF
-              </Badge>
-            )}
           </div>
           <div className="absolute top-2 right-2">
             <Badge variant={product.inStock ? 'default' : 'secondary'} className={product.inStock ? 'bg-green-500/90 text-white' : 'bg-muted text-muted-foreground'}>
@@ -78,14 +70,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             <span className="text-xs text-muted-foreground">({product.reviews} reviews)</span>
           </div>
           <div className="flex items-baseline gap-2">
-            {discountedPrice ? (
-              <>
-                <span className="text-2xl font-bold text-primary">{format(discountedPrice)}</span>
-                <span className="text-sm text-muted-foreground line-through">{format(product.price)}</span>
-              </>
-            ) : (
-              <span className="text-2xl font-bold text-primary">{format(product.price)}</span>
-            )}
+            <span className="text-2xl font-bold text-primary">{format(product.price)}</span>
           </div>
           <div className="pt-2 border-t border-border/50 space-y-1">
             <p className="text-sm font-medium truncate">{product.business}</p>
@@ -98,9 +83,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
             <Button variant={justAdded || isInCart ? 'secondary' : 'default'} size="sm" className="flex-1" onClick={handleAddToCart} disabled={justAdded || !product.inStock}>
               {justAdded ? <><Check className="w-4 h-4 mr-1" /> Added!</> : isInCart ? <><ShoppingCart className="w-4 h-4 mr-1" /> Add More</> : <><ShoppingCart className="w-4 h-4 mr-1" /> Add to Cart</>}
             </Button>
-            <Link to="/map" onClick={e => e.stopPropagation()}>
-              <Button variant="outline" size="sm" className="px-3"><MapPin className="w-4 h-4" /></Button>
-            </Link>
+            <Button variant="outline" size="sm" className="px-3" onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(`/map?lat=${product.lat}&lng=${product.lng}&name=${encodeURIComponent(product.business)}`);
+            }}><MapPin className="w-4 h-4" /></Button>
           </div>
         </CardContent>
       </Card>
