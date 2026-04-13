@@ -213,7 +213,8 @@ const KnowledgeBase = () => {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/90" />
+        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&h=1080&fit=crop" alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-background/92 backdrop-blur-sm" />
       </div>
 
       <div className="relative z-10 p-4 sm:p-6 md:p-8">
