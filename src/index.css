@@ -158,3 +158,12 @@ All colors MUST be HSL.
     @apply glass-morphism rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
   }
 }
+/* Map popup overlap fixes */
+.leaflet-popup { z-index: 1000 !important; }
+.leaflet-popup-content-wrapper { background: white !important; box-shadow: 0 6px 24px rgba(0,0,0,0.18) !important; border-radius: 8px !important; }
+.leaflet-popup-content { margin: 10px 12px !important; }
+.leaflet-popup-tip { background: white !important; }
+.biz-popup .leaflet-popup-content-wrapper { padding: 2px; }
+/* Ensure marker labels never sit on top of popups */
+.leaflet-marker-icon { z-index: 400 !important; }
+.leaflet-popup-pane { z-index: 700 !important; }
