@@ -109,40 +109,9 @@ const ClusteredMapView = ({
     }).addTo(mapRef.current)
       .bindPopup('<strong>Your Location</strong>');
 
-    // Initialize cluster group
-    clusterGroupRef.current = (L as any).markerClusterGroup({
-      chunkedLoading: true,
-      showCoverageOnHover: false,
-      spiderfyOnMaxZoom: true,
-      maxClusterRadius: 60,
-      iconCreateFunction: (cluster: any) => {
-        const count = cluster.getChildCount();
-        let sizeClass = 40;
-        if (count >= 50) sizeClass = 56;
-        else if (count >= 20) sizeClass = 48;
-
-        return L.divIcon({
-          html: `<div style="
-            width: ${sizeClass}px;
-            height: ${sizeClass}px;
-            background: hsl(217, 91%, 60%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: ${count >= 50 ? '15px' : '13px'};
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-          ">${count}</div>`,
-          className: 'marker-cluster-custom',
-          iconSize: L.point(sizeClass, sizeClass)
-        });
-      }
-    });
-    
-    mapRef.current.addLayer(clusterGroupRef.current);
+    // Use plain layer group (clustering disabled — show every marker individually)
+    clusterGroupRef.current = L.layerGroup() as any;
+    mapRef.current.addLayer(clusterGroupRef.current as any);
     setMapReady(true);
 
     // Helper to create marker popup with actions
@@ -385,13 +354,13 @@ const ClusteredMapView = ({
       });
 
       marker.bindPopup(`
-        <div style="min-width:200px;">
-          <h3 style="margin:0 0 4px;font-weight:bold;">${business.name}</h3>
-          <p style="margin:0;color:#666;font-size:12px;">${business.type.replace('_', ' ')}</p>
-          <p style="margin:4px 0 8px;font-size:11px;">${business.address || ''}</p>
+        <div style="min-width:220px;background:white;padding:4px;">
+          <h3 style="margin:0 0 6px;font-weight:bold;font-size:14px;line-height:1.3;color:#111;">${business.name}</h3>
+          <p style="margin:0 0 4px;color:#555;font-size:12px;line-height:1.3;text-transform:capitalize;">${business.type.replace('_', ' ')}</p>
+          <p style="margin:0 0 10px;font-size:11px;line-height:1.4;color:#666;">${business.address || ''}</p>
           <button class="biz-fav-btn" data-name="${business.name}" data-lat="${business.latitude}" data-lng="${business.longitude}" style="width:100%;padding:6px;background:hsl(217,91%,60%);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;">★ Save to Favorites</button>
         </div>
-      `);
+      `, { autoPan: true, autoPanPadding: [40, 40], maxWidth: 280, className: 'biz-popup', closeButton: true });
 
       marker.on('popupopen', () => {
         const container = marker.getPopup()?.getElement();
