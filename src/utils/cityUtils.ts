@@ -47,10 +47,22 @@ export const extractCityName = (data: any, coordinates: Coordinates): string => 
   return cityName;
 };
 
+const cityCache = new Map<string, string>();
+let lastNominatimCall = 0;
+const NOMINATIM_MIN_INTERVAL = 1100; // ms — comply with Nominatim usage policy
+
 export const getCityFromCoordinates = async (coordinates: Coordinates): Promise<string> => {
+  const cacheKey = `${coordinates.lat.toFixed(2)},${coordinates.lng.toFixed(2)}`;
+  if (cityCache.has(cacheKey)) return cityCache.get(cacheKey)!;
+
   try {
+    const wait = Math.max(0, NOMINATIM_MIN_INTERVAL - (Date.now() - lastNominatimCall));
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    lastNominatimCall = Date.now();
+
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coordinates.lat}&lon=${coordinates.lng}&zoom=10&addressdetails=1`
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coordinates.lat}&lon=${coordinates.lng}&zoom=10&addressdetails=1`,
+      { headers: { 'Accept': 'application/json' } }
     );
 
     if (!response.ok) {
@@ -58,7 +70,9 @@ export const getCityFromCoordinates = async (coordinates: Coordinates): Promise<
     }
 
     const data = await response.json();
-    return extractCityName(data, coordinates);
+    const city = extractCityName(data, coordinates);
+    cityCache.set(cacheKey, city);
+    return city;
   } catch (error) {
     console.error('Reverse geocoding error:', error);
     return 'Unknown City';
