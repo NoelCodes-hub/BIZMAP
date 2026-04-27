@@ -148,7 +148,7 @@ Be helpful, concise, and location-aware. Use emojis sparingly to add personality
     });
   } catch (error) {
     console.error("BizMap AI error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "An error occurred processing your request. Please try again." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
