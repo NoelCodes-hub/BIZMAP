@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Business } from '@/types/business';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ConversationalSearchProps {
   businesses: Business[];
@@ -44,11 +45,19 @@ const ConversationalSearch = ({
     setResults([]);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast({ title: "Not authenticated", description: "Please sign in to use AI search.", variant: "destructive" });
+        setIsSearching(false);
+        return;
+      }
+
       const resp = await fetch(SEARCH_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({
           query: query.trim(),
