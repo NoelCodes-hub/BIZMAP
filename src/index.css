@@ -155,7 +155,18 @@ All colors MUST be HSL.
   }
 
   .map-overlay-button {
-    @apply glass-morphism rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
+    @apply rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 backdrop-blur-md border;
+    background-color: hsl(220 9% 82% / 0.92);
+    border-color: hsl(220 10% 70% / 0.6);
+    color: hsl(222 47% 15%);
+  }
+  .map-overlay-button:hover {
+    background-color: hsl(220 9% 76% / 0.95);
+  }
+  .dark .map-overlay-button {
+    background-color: hsl(var(--card) / 0.8);
+    border-color: hsl(var(--border) / 0.5);
+    color: hsl(var(--foreground));
   }
 }
 /* Map popup overlap fixes */
