@@ -37,7 +37,48 @@ serve(async (req) => {
 
     console.log(`Authenticated user: ${user.id}`);
 
-    const { messages, context, language } = await req.json();
+    const MAX_BODY_SIZE = 1024 * 1024;
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength) > MAX_BODY_SIZE) {
+      return new Response(JSON.stringify({ error: "Request too large" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid request format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { messages, context, language } = body ?? {};
+    if (
+      !Array.isArray(messages) ||
+      messages.length === 0 ||
+      messages.length > 50 ||
+      !messages.every(
+        (m: any) =>
+          m && typeof m.content === "string" && m.content.length <= 10000 &&
+          ["user", "assistant", "system"].includes(m.role)
+      )
+    ) {
+      return new Response(JSON.stringify({ error: "Invalid messages payload" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (language && (typeof language !== "string" || language.length > 50)) {
+      return new Response(JSON.stringify({ error: "Invalid language" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
