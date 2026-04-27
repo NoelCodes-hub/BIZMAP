@@ -167,3 +167,8 @@ All colors MUST be HSL.
 /* Ensure marker labels never sit on top of popups */
 .leaflet-marker-icon { z-index: 400 !important; }
 .leaflet-popup-pane { z-index: 700 !important; }
+
+/* Drop zoom control below the top search bar so controls don't overlap */
+.leaflet-top.leaflet-left { top: 80px; }
+.leaflet-control-zoom { margin-top: 0 !important; margin-left: 12px !important; }
+.leaflet-control-zoom a { margin-bottom: 6px !important; border-radius: 8px !important; }
