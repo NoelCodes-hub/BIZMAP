@@ -47,10 +47,50 @@ serve(async (req) => {
     const userId = userData.user.id;
     console.log(`Authenticated user: ${userId}`);
 
-    const { query, businesses } = await req.json() as { 
-      query: string; 
-      businesses: BusinessInfo[] 
-    };
+    const MAX_BODY_SIZE = 1024 * 1024;
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength) > MAX_BODY_SIZE) {
+      return new Response(JSON.stringify({ error: "Request too large" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid request format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { query, businesses } = body ?? {};
+    if (typeof query !== "string" || query.trim().length === 0 || query.length > 500) {
+      return new Response(JSON.stringify({ error: "Invalid query" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (
+      !Array.isArray(businesses) ||
+      businesses.length === 0 ||
+      businesses.length > 1000 ||
+      !businesses.every(
+        (b: any) =>
+          b && typeof b.id === "number" &&
+          typeof b.name === "string" && b.name.length <= 200 &&
+          typeof b.type === "string" && b.type.length <= 100 &&
+          (b.address === undefined || (typeof b.address === "string" && b.address.length <= 300))
+      )
+    ) {
+      return new Response(JSON.stringify({ error: "Invalid businesses payload" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
