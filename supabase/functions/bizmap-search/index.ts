@@ -209,7 +209,7 @@ Only include businesses that genuinely match the user's intent. If nothing match
   } catch (error) {
     console.error("Search error:", error);
     return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : "Unknown error" 
+      error: "An error occurred processing your request. Please try again."
     }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
