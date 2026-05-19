@@ -36,11 +36,11 @@ const Tools = () => {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background image */}
       <div className="absolute inset-0 -z-10">
-        <img src={toolsBg} alt="" width={1920} height={1080} loading="lazy" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-background/30" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-primary/10 blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-accent/10 blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
-      </div>
+        <img src={toolsBg} alt="" width={1920} height={1080} loading="lazy" className="w-full h-full object-cover saturate-150 contrast-125" />
+        <div className="absolute inset-0 bg-background/10" />
+        <div className="absolute top-0 left-1/4 w-[32rem] h-[32rem] rounded-full bg-primary/30 blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-[28rem] h-[28rem] rounded-full bg-accent/30 blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute top-1/3 right-1/3 w-72 h-72 rounded-full bg-cyan-400/25 blur-3xl animate-pulse" style={{ animationDelay: '3s' }} />
 
       <div className="p-8">
         <div className="max-w-6xl mx-auto">
