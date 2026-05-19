@@ -41,6 +41,7 @@ const Tools = () => {
         <div className="absolute top-0 left-1/4 w-[32rem] h-[32rem] rounded-full bg-primary/30 blur-3xl animate-pulse" />
         <div className="absolute bottom-0 right-1/4 w-[28rem] h-[28rem] rounded-full bg-accent/30 blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
         <div className="absolute top-1/3 right-1/3 w-72 h-72 rounded-full bg-cyan-400/25 blur-3xl animate-pulse" style={{ animationDelay: '3s' }} />
+      </div>
 
       <div className="p-8">
         <div className="max-w-6xl mx-auto">
