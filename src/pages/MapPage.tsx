@@ -34,7 +34,8 @@ const MapPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { getUserLocation, isLoading: isGettingLocation } = useGeolocation();
-  const { addFavorite } = useFavorites();
+  const { addFavorite, favorites } = useFavorites();
+  const favoritesCount = favorites.length;
   
   const allBusinesses = useMemo(() => 
     createSampleData(currentCoordinates, 'Bulawayo'), 
@@ -103,8 +104,10 @@ const MapPage = () => {
   }, [addFavorite]);
 
   const handleSelectFavoriteLocation = useCallback((coords: Coordinates) => {
-    setCurrentCoordinates(coords);
-    toast({ title: "Location loaded", description: "Map centered on saved location" });
+    // Nudge coords slightly to force re-trigger even if same favorite is reselected
+    setCurrentCoordinates({ lat: coords.lat + (Math.random() - 0.5) * 1e-9, lng: coords.lng });
+    setTargetMarker(coords);
+    toast({ title: "Location loaded", description: "Map centered on saved favorite" });
   }, [toast]);
 
   const handleCoordinatePicked = useCallback((coords: Coordinates) => {
@@ -215,28 +218,34 @@ const MapPage = () => {
         </div>
       )}
 
-      {/* Top buttons */}
-      <div className="absolute top-12 left-20 z-[1000] flex gap-2 flex-wrap">
-        <Button onClick={() => setShowAddressSearch(!showAddressSearch)} variant="secondary" size="sm" className="shadow-lg">
-          <Search className="h-4 w-4 mr-2" /> Search
+      {/* Compact top toolbar */}
+      <div className="absolute top-12 left-1/2 -translate-x-1/2 z-[1000] flex gap-1.5 bg-card/90 backdrop-blur-md border border-border rounded-full shadow-lg px-2 py-1.5">
+        <Button onClick={() => setShowAddressSearch(!showAddressSearch)} variant="ghost" size="sm" className="h-8 rounded-full" title="Search address">
+          <Search className="h-4 w-4" />
         </Button>
-        <Button onClick={() => setShowSearch(!showSearch)} variant="secondary" size="sm" className="shadow-lg">
-          <Sparkles className="h-4 w-4 mr-2" /> AI Search
+        <Button onClick={() => setShowSearch(!showSearch)} variant="ghost" size="sm" className="h-8 rounded-full" title="AI Search">
+          <Sparkles className="h-4 w-4" />
         </Button>
-        <Button onClick={() => setShowFavorites(!showFavorites)} variant="secondary" size="sm" className="shadow-lg">
-          <Star className="h-4 w-4 mr-2" /> Favorites
+        <Button onClick={() => setShowFavorites(!showFavorites)} variant="ghost" size="sm" className="h-8 rounded-full relative" title="Favorites">
+          <Star className={`h-4 w-4 ${showFavorites ? 'fill-primary text-primary' : ''}`} />
+          {favoritesCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] rounded-full h-4 min-w-4 px-1 flex items-center justify-center font-semibold">
+              {favoritesCount}
+            </span>
+          )}
         </Button>
         <Button
           onClick={() => { setCoordinatePickerMode(!coordinatePickerMode); if (coordinatePickerMode) setPickedCoords(null); }}
-          variant={coordinatePickerMode ? "default" : "secondary"}
+          variant="ghost"
           size="sm"
-          className={`shadow-lg ${coordinatePickerMode ? 'cosmic-gradient text-primary-foreground' : ''}`}
+          className={`h-8 rounded-full ${coordinatePickerMode ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
+          title="Pick coordinates"
         >
-          <Crosshair className="h-4 w-4 mr-2" /> Pick Coords
+          <Crosshair className="h-4 w-4" />
         </Button>
         {targetMarker && (
-          <Button onClick={() => handleSaveFavorite(`Location ${new Date().toLocaleTimeString()}`, targetMarker, 'location')} variant="secondary" size="sm" className="shadow-lg">
-            <Star className="h-4 w-4 mr-2 fill-primary" /> Save Location
+          <Button onClick={() => handleSaveFavorite(`Location ${new Date().toLocaleTimeString()}`, targetMarker, 'location')} variant="ghost" size="sm" className="h-8 rounded-full" title="Save target as favorite">
+            <Star className="h-4 w-4 fill-primary text-primary" />
           </Button>
         )}
       </div>

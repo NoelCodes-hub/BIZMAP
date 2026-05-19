@@ -297,8 +297,9 @@ const ClusteredMapView = ({
   // Update center and user marker when coordinates change
   useEffect(() => {
     if (mapRef.current) {
-      mapRef.current.setView([coordinates.lat, coordinates.lng], mapRef.current.getZoom());
-      
+      const currentZoom = mapRef.current.getZoom();
+      mapRef.current.flyTo([coordinates.lat, coordinates.lng], Math.max(currentZoom, 16), { duration: 0.8 });
+
       // Update user marker position for live tracking
       if (userMarkerRef.current) {
         userMarkerRef.current.setLatLng([coordinates.lat, coordinates.lng]);
