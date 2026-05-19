@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Calculator, Ruler, MapPin, Compass, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import toolsBg from '@/assets/tools-bg.jpg';
 
 const Tools = () => {
   const tools = [
@@ -35,15 +36,10 @@ const Tools = () => {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background image */}
       <div className="absolute inset-0 -z-10">
-        <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1920&h=1080&fit=crop" alt="" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-background/90 backdrop-blur-sm" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-primary/8 blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-accent/8 blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }} />
+        <img src={toolsBg} alt="" width={1920} height={1080} loading="lazy" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-primary/10 blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-accent/10 blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
       </div>
 
       <div className="p-8">
