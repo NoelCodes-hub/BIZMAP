@@ -103,8 +103,10 @@ const MapPage = () => {
   }, [addFavorite]);
 
   const handleSelectFavoriteLocation = useCallback((coords: Coordinates) => {
-    setCurrentCoordinates(coords);
-    toast({ title: "Location loaded", description: "Map centered on saved location" });
+    // Nudge coords slightly to force re-trigger even if same favorite is reselected
+    setCurrentCoordinates({ lat: coords.lat + (Math.random() - 0.5) * 1e-9, lng: coords.lng });
+    setTargetMarker(coords);
+    toast({ title: "Location loaded", description: "Map centered on saved favorite" });
   }, [toast]);
 
   const handleCoordinatePicked = useCallback((coords: Coordinates) => {
