@@ -34,7 +34,8 @@ const MapPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { getUserLocation, isLoading: isGettingLocation } = useGeolocation();
-  const { addFavorite } = useFavorites();
+  const { addFavorite, favorites } = useFavorites();
+  const favoritesCount = favorites.length;
   
   const allBusinesses = useMemo(() => 
     createSampleData(currentCoordinates, 'Bulawayo'), 
