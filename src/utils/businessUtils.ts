@@ -139,7 +139,21 @@ export const createSampleData = (coordinates: Coordinates, currentCity: string):
     
     // Business Services
     { id: 56, name: "Zimbabwe National Chamber of Commerce", ...getStreetCoordinates('Fort St', '9th Ave'), type: "business_services", city: currentCity, address: "9th Ave & Fort St" },
-    { id: 57, name: "PN&A Chartered Accountants", latitude: -20.1486, longitude: 28.5806, type: "business_services", city: currentCity, address: "CBD" }
+    { id: 57, name: "PN&A Chartered Accountants", latitude: -20.1486, longitude: 28.5806, type: "business_services", city: currentCity, address: "CBD" },
+
+    // Malls & grouped business centres (clustered hubs of multiple tenants)
+    { id: 58, name: "Bulawayo Centre Mall", latitude: -20.1490, longitude: 28.5810, type: "mall", city: currentCity, address: "Corner Jason Moyo St & 9th Ave" },
+    { id: 59, name: "Fife Street Mall", latitude: -20.1491, longitude: 28.5812, type: "mall", city: currentCity, address: "Fife St between 8th & 9th Ave" },
+    { id: 60, name: "Haddon & Sly Building", latitude: -20.1489, longitude: 28.5808, type: "mall", city: currentCity, address: "Fife St & 8th Ave" },
+    { id: 61, name: "Old Mutual Centre", latitude: -20.1488, longitude: 28.5807, type: "mall", city: currentCity, address: "Jason Moyo St & 8th Ave" },
+    { id: 62, name: "NRZ Building Complex", latitude: -20.1462, longitude: 28.5826, type: "mall", city: currentCity, address: "Fife St & 13th Ave" },
+    { id: 63, name: "Pioneer House", latitude: -20.1487, longitude: 28.5811, type: "mall", city: currentCity, address: "Fife St & 9th Ave" },
+    { id: 64, name: "Parkade Centre", latitude: -20.1492, longitude: 28.5815, type: "mall", city: currentCity, address: "Fort St & 9th Ave" },
+    { id: 65, name: "LAPF Pension House", latitude: -20.1493, longitude: 28.5816, type: "mall", city: currentCity, address: "Fort St & 9th Ave" },
+    { id: 66, name: "Hyper City Mall", latitude: -20.1455, longitude: 28.5836, type: "mall", city: currentCity, address: "Robert Mugabe Way & 13th Ave" },
+    { id: 67, name: "Ascot Shopping Centre", latitude: -20.1418, longitude: 28.5755, type: "mall", city: currentCity, address: "Ascot, near CBD" },
+    { id: 68, name: "Bradfield Shopping Centre", latitude: -20.1572, longitude: 28.5905, type: "mall", city: currentCity, address: "Bradfield Suburb" },
+    { id: 69, name: "Hillside Shopping Centre", latitude: -20.1648, longitude: 28.6010, type: "mall", city: currentCity, address: "Hillside" },
   ];
 
   // Validate all businesses have coordinates before returning
@@ -170,7 +184,8 @@ export const getMarkerColor = (type: string): string => {
     'pharmacy': '#7f7f7f',
     'beauty': '#ff69b4',
     'business_services': '#2e8b57',
-    'ngo': '#ff4500'
+    'ngo': '#ff4500',
+    'mall': '#6f42c1'
   };
   return colors[type as keyof typeof colors] || '#007bff';
 };
