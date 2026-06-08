@@ -184,7 +184,8 @@ export const getMarkerColor = (type: string): string => {
     'pharmacy': '#7f7f7f',
     'beauty': '#ff69b4',
     'business_services': '#2e8b57',
-    'ngo': '#ff4500'
+    'ngo': '#ff4500',
+    'mall': '#6f42c1'
   };
   return colors[type as keyof typeof colors] || '#007bff';
 };
