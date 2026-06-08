@@ -109,18 +109,21 @@ const ClusteredMapView = ({
     }).addTo(mapRef.current)
       .bindPopup('<strong>Your Location</strong>');
 
-    // Marker clustering — groups malls & nearby businesses into expandable clusters
+    // Marker clustering — click a cluster to drill down into smaller clusters,
+    // continuing until individual markers (spiderfies when stacked at max zoom).
     clusterGroupRef.current = (L as any).markerClusterGroup({
-      showCoverageOnHover: false,
+      showCoverageOnHover: true,
       spiderfyOnMaxZoom: true,
       zoomToBoundsOnClick: true,
-      disableClusteringAtZoom: 18,
-      maxClusterRadius: 60,
+      disableClusteringAtZoom: 19,
+      maxClusterRadius: (zoom: number) => Math.max(20, 80 - zoom * 3),
+      spiderfyDistanceMultiplier: 1.4,
+      animateAddingMarkers: true,
       iconCreateFunction: (cluster: any) => {
         const count = cluster.getChildCount();
-        const size = count < 10 ? 38 : count < 30 ? 46 : 54;
+        const size = count < 10 ? 38 : count < 30 ? 46 : count < 100 ? 54 : 62;
         return L.divIcon({
-          html: `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:radial-gradient(circle at 30% 30%, hsl(217,91%,65%), hsl(217,91%,45%));color:white;font-weight:700;font-size:${size>=46?14:13}px;border:3px solid white;box-shadow:0 4px 14px rgba(30,64,175,0.45);">${count}</div>`,
+          html: `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:radial-gradient(circle at 30% 30%, hsl(217,91%,65%), hsl(217,91%,45%));color:white;font-weight:700;font-size:${size>=46?14:13}px;border:3px solid white;box-shadow:0 4px 14px rgba(30,64,175,0.45);cursor:pointer;">${count}</div>`,
           className: 'bizmap-cluster',
           iconSize: [size, size],
         });
@@ -158,7 +161,7 @@ const ClusteredMapView = ({
           </div>
           <div style="font-size:11px;color:#888;margin-bottom:8px;">${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
           <div style="display:flex;gap:4px;">
-            <button class="land-marker-fav-btn" style="flex:1;padding:6px;background:hsl(217,91%,60%);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;">★ Save Favorite</button>
+            <button class="land-marker-fav-btn" style="flex:1;padding:6px;background:hsl(217,91%,60%);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;">★ Save to Favorites</button>
             <button class="land-marker-delete-btn" style="flex:1;padding:6px;background:hsl(0,72%,51%);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;">Delete</button>
           </div>
         </div>
