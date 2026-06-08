@@ -109,8 +109,23 @@ const ClusteredMapView = ({
     }).addTo(mapRef.current)
       .bindPopup('<strong>Your Location</strong>');
 
-    // Use plain layer group (clustering disabled — show every marker individually)
-    clusterGroupRef.current = L.layerGroup() as any;
+    // Marker clustering — groups malls & nearby businesses into expandable clusters
+    clusterGroupRef.current = (L as any).markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+      zoomToBoundsOnClick: true,
+      disableClusteringAtZoom: 18,
+      maxClusterRadius: 60,
+      iconCreateFunction: (cluster: any) => {
+        const count = cluster.getChildCount();
+        const size = count < 10 ? 38 : count < 30 ? 46 : 54;
+        return L.divIcon({
+          html: `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:radial-gradient(circle at 30% 30%, hsl(217,91%,65%), hsl(217,91%,45%));color:white;font-weight:700;font-size:${size>=46?14:13}px;border:3px solid white;box-shadow:0 4px 14px rgba(30,64,175,0.45);">${count}</div>`,
+          className: 'bizmap-cluster',
+          iconSize: [size, size],
+        });
+      }
+    });
     mapRef.current.addLayer(clusterGroupRef.current as any);
     setMapReady(true);
 
