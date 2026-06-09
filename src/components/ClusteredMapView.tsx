@@ -359,37 +359,74 @@ const ClusteredMapView = ({
 
     const displayBusinesses = highlightedBusinesses?.length ? highlightedBusinesses : businesses;
 
+    const renderBizIcon = (color: string, label: string, highlighted: boolean) => {
+      const size = highlighted ? 32 : 24;
+      const hasLabel = label.trim().length > 0;
+      return L.divIcon({
+        html: `<div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+          <div style="width:${size}px;height:${size}px;background:${color};border:3px solid ${highlighted ? 'hsl(217,91%,60%)' : 'white'};border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);${highlighted ? 'animation:pulse 2s infinite;' : ''}"></div>
+          ${hasLabel ? `<div style="position:absolute;top:${size+2}px;background:white;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;color:${color};white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.2);max-width:120px;overflow:hidden;text-overflow:ellipsis;">${label}</div>` : ''}
+        </div>`,
+        iconSize: [size, hasLabel ? size + 22 : size],
+        iconAnchor: [size/2, size/2]
+      });
+    };
+
+    const buildBizPopup = (name: string, currentColor: string, lat: number, lng: number, typeLabel: string, address: string) => {
+      const colorButtons = MARKER_COLORS.map((c) =>
+        `<button class="biz-color-btn" data-color="${c}" style="width:20px;height:20px;background:${c};border:2px solid ${c === currentColor ? 'hsl(217,91%,60%)' : 'white'};border-radius:50%;cursor:pointer;margin:2px;"></button>`
+      ).join('');
+      return `
+        <div style="min-width:240px;background:white;padding:4px;">
+          <input type="text" class="biz-label-input" value="${name.replace(/"/g, '&quot;')}" placeholder="Name this place..." style="width:100%;padding:8px;border:1px solid hsl(217,91%,60%);border-radius:4px;margin-bottom:6px;font-size:14px;font-weight:600;outline:none;" />
+          <p style="margin:0 0 4px;color:#555;font-size:11px;line-height:1.3;text-transform:capitalize;">${typeLabel}</p>
+          <p style="margin:0 0 6px;font-size:11px;line-height:1.4;color:#666;">${address || ''}</p>
+          <div style="margin:6px 0;display:flex;flex-wrap:wrap;gap:2px;">${colorButtons}</div>
+          <button class="biz-fav-btn" data-lat="${lat}" data-lng="${lng}" style="width:100%;padding:6px;background:hsl(217,91%,60%);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;">★ Save to Favorites</button>
+        </div>
+      `;
+    };
+
     displayBusinesses.forEach((business) => {
-      const color = getMarkerColor(business.type);
-      const isHighlighted = highlightedBusinesses?.some(b => b.id === business.id);
-      const size = isHighlighted ? 32 : 24;
-      
+      const defaultColor = getMarkerColor(business.type);
+      const isHighlighted = !!highlightedBusinesses?.some(b => b.id === business.id);
+      const state = { color: defaultColor, label: business.name };
+
       const marker = L.marker([business.latitude, business.longitude], {
-        icon: L.divIcon({
-          html: `<div style="width:${size}px;height:${size}px;background:${color};border:3px solid ${isHighlighted ? 'hsl(217,91%,60%)' : 'white'};border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);${isHighlighted ? 'animation:pulse 2s infinite;' : ''}"></div>`,
-          iconSize: [size, size],
-          iconAnchor: [size/2, size/2]
-        })
+        icon: renderBizIcon(defaultColor, '', isHighlighted)
       });
 
-      marker.bindPopup(`
-        <div style="min-width:220px;background:white;padding:4px;">
-          <h3 style="margin:0 0 6px;font-weight:bold;font-size:14px;line-height:1.3;color:#111;">${business.name}</h3>
-          <p style="margin:0 0 4px;color:#555;font-size:12px;line-height:1.3;text-transform:capitalize;">${business.type.replace('_', ' ')}</p>
-          <p style="margin:0 0 10px;font-size:11px;line-height:1.4;color:#666;">${business.address || ''}</p>
-          <button class="biz-fav-btn" data-name="${business.name}" data-lat="${business.latitude}" data-lng="${business.longitude}" style="width:100%;padding:6px;background:hsl(217,91%,60%);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;">★ Save to Favorites</button>
-        </div>
-      `, { autoPan: true, autoPanPadding: [40, 40], maxWidth: 280, className: 'biz-popup', closeButton: true });
+      marker.bindPopup(
+        buildBizPopup(state.label, state.color, business.latitude, business.longitude, business.type.replace('_', ' '), business.address),
+        { autoPan: true, autoPanPadding: [40, 40], maxWidth: 300, className: 'biz-popup', closeButton: true }
+      );
 
       marker.on('popupopen', () => {
         const container = marker.getPopup()?.getElement();
-        container?.querySelector('.biz-fav-btn')?.addEventListener('click', (e) => {
-          const btn = e.target as HTMLElement;
-          onSaveFavoriteRef.current?.(
-            btn.dataset.name || business.name,
-            { lat: +btn.dataset.lat!, lng: +btn.dataset.lng! },
-            'business'
-          );
+        if (!container) return;
+
+        const labelInput = container.querySelector('.biz-label-input') as HTMLInputElement;
+        const applyLabel = () => {
+          state.label = labelInput.value || business.name;
+          marker.setIcon(renderBizIcon(state.color, state.label === business.name ? '' : state.label, isHighlighted));
+        };
+        labelInput?.addEventListener('change', applyLabel);
+        labelInput?.addEventListener('keypress', (evt) => {
+          if ((evt as KeyboardEvent).key === 'Enter') { applyLabel(); marker.closePopup(); }
+        });
+
+        container.querySelectorAll('.biz-color-btn').forEach((btn) => {
+          btn.addEventListener('click', (evt) => {
+            const newColor = (evt.currentTarget as HTMLElement).dataset.color;
+            if (!newColor) return;
+            state.color = newColor;
+            marker.setIcon(renderBizIcon(newColor, state.label === business.name ? '' : state.label, isHighlighted));
+            marker.setPopupContent(buildBizPopup(state.label, newColor, business.latitude, business.longitude, business.type.replace('_', ' '), business.address));
+          });
+        });
+
+        container.querySelector('.biz-fav-btn')?.addEventListener('click', () => {
+          onSaveFavoriteRef.current?.(state.label, { lat: business.latitude, lng: business.longitude }, 'business');
           marker.closePopup();
         });
       });
